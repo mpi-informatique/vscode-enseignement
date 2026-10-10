@@ -1,7 +1,7 @@
 {
   "name": "vscode-enseignement",
   "displayName": "Enseignement Typst",
-  "icon": "media/icon-sidebar.png",
+  "icon": "media/mpi.png",
   "description": "Rechercher, composer et compiler les ressources Typst de mpi-informatique/enseignement et enseignement-prive.",
   "version": "0.1.0",
   "publisher": "qfortier",

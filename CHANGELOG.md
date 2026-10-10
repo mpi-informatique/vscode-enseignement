@@ -2,6 +2,8 @@
 
 ## 0.1.0
 
+- Utiliser le logo MPI comme icône de l'extension.
+
 - Automatiser la publication Marketplace et des VSIX GitHub à partir des tags stables.
 
 - Créer l'extension Enseignement Typst pour les dépôts `enseignement` et `enseignement-prive`.
