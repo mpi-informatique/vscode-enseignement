@@ -1,0 +1,24 @@
+import * as vscode from 'vscode';
+import assert from 'node:assert/strict';
+import * as discovery from './integration/discovery';
+import * as organisation from './integration/organisation';
+import * as copies from './integration/copies';
+import * as edition from './integration/edition';
+import * as preview from './integration/preview';
+import * as documents from './integration/documents';
+
+export async function run(): Promise<void> {
+  const extension = vscode.extensions.getExtension('qfortier.vscode-enseignement');
+  assert.ok(extension, 'Extension chargée');
+  const api = await extension.activate();
+  const suites = { decouverte: discovery, organisation, corrections: copies, edition, apercu: preview, documents };
+  const selected = process.env.MPI_INTEGRATION_SUITE;
+  const failures: unknown[] = [];
+  for (const [name, suite] of Object.entries(suites)) {
+    if (selected && name !== selected) continue;
+    console.log(`Suite : ${name}`);
+    try { await suite.run(api, extension); }
+    catch (error) { console.error(`Échec de la suite ${name}`, error); failures.push(error); }
+  }
+  if (failures.length) throw new AggregateError(failures, "Échecs des tests d'intégration");
+}

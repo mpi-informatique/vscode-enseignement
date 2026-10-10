@@ -1,0 +1,286 @@
+import { test } from 'node:test';
+import { searchPriority } from '../src/search-order';
+import assert from 'node:assert/strict';
+import { identify } from '../src/documents';
+import { Exercise, executionCommand, matches, parseCatalogue, parseDiagnostics, pdfTarget, pdfFilename, previewArguments } from '../src/core';
+import { exerciseFromTemplate, sheetFromTemplate, outline, vocabulary, mask } from '../src/typst';
+import { hierarchy, isFolder } from '../src/tree';
+import { sheetList, editSheet, sourceMetadata } from '../src/sheet-model';
+import { bridgeHtml } from '../src/preview-bridge';
+import { creationPath, contestFromTemplate } from '../src/typst';
+import { Refresh } from '../src/refresh';
+import { copyDirectory, copyInputs } from '../src/copy-inputs';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import * as path from 'node:path';
+import { tmpdir } from 'node:os';
+
+test('documents : polys et présentations avec leur propre fonction de mise en page', () => {
+  const poly = '#show: cours.with(type: "poly", titre: "Automates",)';
+  const slides = '#show: diapositives.with(type: "presentation", titre: "Résumé",)';
+  assert.deepEqual(identify(poly), { kind: 'document', type: 'poly', direct: true });
+  assert.deepEqual(identify(slides), { kind: 'document', type: 'presentation', direct: true });
+  assert.equal(sourceMetadata(poly, 'chapitres/automates/poly.typ').titre, 'Automates');
+  assert.equal(identify('#show: text.with(font: "Arial")'), undefined);
+  assert.equal(identify('// #show: cours.with(type: "poly")'), undefined);
+  assert.throws(() => sheetList(poly, 'poly.typ'), /Composition/);
+});
+
+test('copies : lire les CSV du DS, gérer le BOM et les fichiers absents', async () => {
+  const temporary = await mkdtemp(path.join(tmpdir(), 'mpi-copy-inputs-'));
+  try {
+    const copies = path.join(temporary, 'copies');
+    await mkdir(copies);
+    const source = path.join(copies, 'exemple.typ');
+    assert.equal(copyDirectory(source), temporary);
+    assert.equal(copyDirectory(path.join(temporary, 'exemple.typ')), temporary);
+    assert.deepEqual(await copyInputs(source), ['--input', 'notes=', '--input', 'recap=']);
+    await writeFile(path.join(temporary, 'notes.csv'), '\uFEFFclasse;nom;prenom\nMPI;Nom;Prénom\n');
+    await writeFile(path.join(temporary, 'recapitulatif.csv'), 'classe;note\nMPI;12,5\n');
+    assert.deepEqual(await copyInputs(source), ['--input', 'notes=classe;nom;prenom\nMPI;Nom;Prénom\n', '--input', 'recap=classe;note\nMPI;12,5\n']);
+    await rm(path.join(temporary, 'notes.csv'));
+    await mkdir(path.join(temporary, 'notes.csv'));
+    await assert.rejects(copyInputs(source), /EISDIR/);
+  } finally { await rm(temporary, { recursive: true, force: true }); }
+});
+
+test('catalogue automatique : inactif sans changements, regroupement, relance et erreurs', async () => {
+  let calls = 0; let release!: () => void;
+  const errors: unknown[] = [];
+  const refresh = new Refresh(async () => { calls++; await new Promise<void>(resolve => { release = resolve; }); }, error => errors.push(error), 60000);
+  try {
+    await refresh.flush(); assert.equal(calls, 0);
+    refresh.mark(); refresh.mark(); const first = refresh.flush(); assert.equal(calls, 1);
+    refresh.mark(); await refresh.flush(); assert.equal(calls, 1);
+    release(); await first;
+    const second = refresh.flush(); assert.equal(calls, 2); release(); await second;
+    await refresh.flush(); assert.equal(calls, 2);
+  } finally { refresh.dispose(); }
+  const failure = new Refresh(async () => { throw new Error('Typst invalide'); }, error => errors.push(error), 60000);
+  try {
+    failure.mark(); await failure.flush(); await failure.flush(); assert.equal(errors.length, 1);
+    failure.mark(); await failure.flush(); assert.equal(errors.length, 2);
+    failure.dispose(); failure.mark(); await failure.flush(); assert.equal(errors.length, 2);
+  } finally { failure.dispose(); }
+});
+
+test('création dans un dossier libre ou à la racine, sans traversée', () => {
+  assert.equal(creationPath('exercices/devoirs/2026-2027', 'ds-1'), 'exercices/devoirs/2026-2027/ds-1.typ');
+  assert.equal(creationPath('classe/chapitre', 'td-test'), 'classe/chapitre/td-test.typ');
+  assert.equal(creationPath('', 'sujet'), 'sujet.typ');
+  assert.equal(creationPath('corrections/2026/ds/ds1/copies', 'nom-prenom'), 'corrections/2026/ds/ds1/copies/nom-prenom.typ');
+  for (const folder of ['..', 'exercices/feuilles/../concours', '/feuilles']) assert.throws(() => creationPath(folder, 'test'));
+  assert.throws(() => creationPath('feuilles', '../test'));
+  const template = 'titre: "Modèle",\nconcours: none,\ncontenu: (question([Question]),)';
+  assert.equal(contestFromTemplate(template, 'Titre "cité"'), 'titre: "Titre \\"cité\\"",\nconcours: none,\ncontenu: (question([Question]),)'.replaceAll('\\\\', '\\'));
+  assert.throws(() => contestFromTemplate('modèle incompatible', 'Titre'));
+});
+
+const exercise: Exercise = {
+  titre: 'Automates et monoïdes', fichier: 'exercices/banque/langages/automates-monoides.typ',
+  chapitres: ['automates-finis'], algorithmes: [], structures: [], langages: ['OCaml'],
+  niveaux: ['MPI'], difficulte: 4, duree: [1, 30], concours: { nom: 'ENS', annee: 2022, filiere: 'MP' }
+};
+const editableSheet = '#import "/exercices/a.typ": ex as a\n#import "../../exercices/b.typ": ex as b\n#import "/exercices/unused.typ": ex as unused\n#show: feuille.with(titre: "TD", exercices: (a, /* second */ b,),)\nTexte personnalisé.';
+test('composition : ordre réel, imports inutilisés ignorés, références relatives', () => {
+  const list = sheetList(editableSheet, 'exercices/feuilles/test.typ');
+  assert.deepEqual(list.entries.map(entry => entry.source), ['exercices/a.typ', 'exercices/b.typ']);
+  const moved = editSheet(editableSheet, 'exercices/feuilles/test.typ', { index: 1, direction: -1 });
+  assert.deepEqual(sheetList(moved, 'exercices/feuilles/test.typ').entries.map(entry => entry.alias), ['b', 'a']);
+  assert.ok(moved.includes('/* second */'));
+  assert.ok(moved.endsWith('Texte personnalisé.'));
+  const removed = editSheet(moved, 'exercices/feuilles/test.typ', { index: 0 });
+  assert.equal(sheetList(removed, 'exercices/feuilles/test.typ').entries.length, 1);
+  assert.ok(!removed.includes('ex as b'), 'Import retiré avec l’exercice');
+  const added = editSheet(removed, 'exercices/feuilles/test.typ', { add: 'exercices/c.typ' });
+  assert.deepEqual(sheetList(added, 'exercices/feuilles/test.typ').entries.map(entry => entry.source), ['exercices/a.typ', 'exercices/c.typ']);
+  assert.throws(() => editSheet(added, 'exercices/feuilles/test.typ', { add: 'exercices/a.typ' }));
+});
+test('compositions calculées, ambiguës ou alias redéfinis : aucune réécriture', () => {
+  for (const list of ['(..autres,)', '(a,)+autres', '(a.with(meta: (:)),)', '(inconnu,)', '(a)']) {
+    assert.throws(() => sheetList(editableSheet.replace('(a, /* second */ b,)', list), 'exercices/feuilles/test.typ'));
+  }
+  assert.throws(() => sheetList(editableSheet + '\n#let a = autre', 'exercices/feuilles/test.typ'));
+});
+test('anciennes feuilles sans virgule finale et nouvelle feuille vide', () => {
+  const old = editableSheet.replace('(a, /* second */ b,)', '(a, b)');
+  assert.deepEqual(sheetList(old, 'exercices/feuilles/test.typ').entries.map(entry => entry.alias), ['a', 'b']);
+  const removed = editSheet(old, 'exercices/feuilles/test.typ', { index: 1 });
+  assert.ok(!removed.includes('ex as b'));
+  assert.equal(sheetList(removed, 'exercices/feuilles/test.typ').entries.length, 1);
+  assert.throws(() => editSheet(old + '\n#b.meta.titre', 'exercices/feuilles/test.typ', { index: 1 }), /ailleurs/);
+  const empty = sheetFromTemplate('#import "/templates/exercice.typ": ex\n#show: feuille.with(\n titre: "TD",\n exercices: (ex,),\n)', 'Vide', []);
+  assert.equal(sheetList(empty, 'exercices/feuilles/test.typ').entries.length, 0);
+  assert.ok(!empty.includes('/templates/exercice.typ'));
+});
+test('effets de survol Tinymist conditionnés à la synchronisation', () => {
+  const html = bridgeHtml('<head><style>.hover .typst-text {x:y}.typst-text:hover {x:y}</style></head>new URL("/", window.location.href)', 'http://127.0.0.1:123', 'secret');
+  assert.ok(html.includes('html.exercices-jumps .typst-text:hover'));
+  assert.ok(html.includes('html:not(.exercices-jumps) .typst-jump-ripple'));
+  assert.ok(html.includes('event.source!==parent'));
+  assert.ok(!html.includes('new URL("/", window.location.href)'));
+});
+test('commentaires imbriqués et code brut ne créent pas de faux éléments', () => {
+  const text = '/* externe /* interne */ question([faux]) */\n`question([faux])`\nquestion([Vrai])';
+  assert.equal(mask(text).length, text.length);
+  assert.equal(outline(text).length, 1);
+  assert.equal(outline(text)[0].title, '1. Vrai');
+});
+test('recherche de métadonnées littérales des sujets', () => {
+  const ex = sourceMetadata('// titre: "Ignoré"\n#let ex = exercice(meta: (titre: "Sujet été", langages: ("OCaml",), niveaux: ("MPI",), concours: (nom: "ENS", annee: 2024),))', 'exercices/concours/24/test.typ');
+  assert.equal(matches(ex, 'ete ENS 2024', { langages: 'OCaml' }), true);
+  assert.equal(matches(ex, '', { difficulteMax: 5 }), false, 'Difficulté inconnue non inventée');
+});
+test('catalogue actuel : tableau et identifiant déduit du chemin', () => {
+  assert.deepEqual(parseCatalogue(JSON.stringify([exercise])), [exercise]);
+  assert.throws(() => parseCatalogue('{}'));
+  assert.throws(() => parseCatalogue(JSON.stringify([exercise, { ...exercise, fichier: 'exercices/autre/automates-monoides.typ' }])));
+});
+test('validation des métadonnées avant leur utilisation', () => {
+  for (const change of [{ titre: null }, { niveaux: null }, { difficulte: 6 }, { duree: [0, 60] }, { concours: { nom: 3 } }]) {
+    assert.throws(() => parseCatalogue(JSON.stringify([{ ...exercise, ...change }])));
+  }
+});
+test('recherche multi-mots, insensible à la casse et aux accents', () => {
+  assert.equal(matches(exercise, 'MONOIDES ens 2022', {}), true);
+  assert.equal(matches(exercise, 'monoides 2021', {}), false);
+  assert.equal(matches(exercise, 'automates-monoides', {}), true);
+});
+test('tous les filtres se cumulent avec la recherche', () => {
+  assert.equal(matches(exercise, 'automates', { chapitres: 'automates-finis', langages: 'OCaml', concours: 'ENS', niveaux: 'MPI', difficulteMax: 4 }), true);
+  assert.equal(matches(exercise, '', { difficulteMax: 3 }), false);
+  assert.equal(matches(exercise, '', { langages: 'Python' }), false);
+  assert.equal(matches({ ...exercise, concours: null }, '', { concours: 'ENS' }), false);
+});
+test('chemins PDF conformes aux scripts Python, feuilles imbriquées incluses', () => {
+  assert.equal(pdfTarget('exercices/devoirs/2026-2027/ds-1.typ', 'enonce'), 'build/exercices/devoirs/2026-2027/ds-1/enonce.pdf');
+  assert.equal(pdfTarget('exercices/devoirs/2026-2027/ds-1.typ', 'corrige'), 'build/exercices/devoirs/2026-2027/ds-1/corrige.pdf');
+  assert.equal(pdfTarget(exercise.fichier, 'enonce'), 'build/exercices/banque/langages/automates-monoides/enonce.pdf');
+  assert.equal(pdfTarget('exercices/concours/22/oral/test.typ', 'corrige'), 'build/exercices/concours/22/oral/test/corrige.pdf');
+  assert.equal(pdfTarget('exercices/feuilles/langages/td.typ', 'enonce'), 'build/exercices/feuilles/langages/td/enonce.pdf');
+  assert.equal(pdfTarget('exercices/feuilles/langages/td.typ', 'corrige'), 'build/exercices/feuilles/langages/td/corrige.pdf');
+  assert.equal(pdfTarget('corrections/2026/ds/ds1/copies/exemple.typ', 'corrige', true), 'build/corrections/2026/ds/ds1/copies/exemple/exemple-cor.pdf');
+  assert.equal(pdfTarget('corrections/2026/ds/ds1/copies/exemple.typ', 'enonce', true), 'build/corrections/2026/ds/ds1/copies/exemple/enonce.pdf');
+});
+test('rejet de chemins sortant de la banque et de chemins non pris en charge', () => {
+  for (const source of ['../test.typ', 'exercices/../test.typ', '/exercices/test.typ', 'exercices/$(shell x).typ', 'exercices/test;exit.typ', 'exercices/test\n.typ']) assert.throws(() => pdfTarget(source, 'enonce'));
+});
+test('Nix automatique pour flake ; exécution directe configurable', () => {
+  assert.deepEqual(executionCommand('auto', true, '/path with spaces/nix', 'python3', ['catalogue']), { command: '/path with spaces/nix', args: ['develop', 'path:.', '-c', 'python3', 'scripts/build.py', 'catalogue'] });
+  assert.deepEqual(executionCommand('direct', true, 'nix', '/path with spaces/python', ['c', 'exercices/banque/test.typ']), { command: '/path with spaces/python', args: ['scripts/build.py', 'c', 'exercices/banque/test.typ'] });
+  assert.equal(executionCommand('auto', false, 'nix', 'python3', []).command, 'python3');
+  assert.equal(executionCommand('nix', false, 'nix', 'python3', []).command, 'nix');
+});
+test('diagnostics Typst : erreurs, avertissements, coordonnées à base zéro', () => {
+  assert.deepEqual(parseDiagnostics('error: unknown variable: foo\n  ┌─ exercices/test.typ:8:4\nwarning: font missing\n  ┌─ lib/exercices.typ:2:1'), [
+    { file: 'exercices/test.typ', line: 7, column: 3, message: 'unknown variable: foo', warning: false },
+    { file: 'lib/exercices.typ', line: 1, column: 0, message: 'font missing', warning: true }
+  ]);
+});
+test('noms PDF : énoncé et corrigé partagent le nom de source', () => {
+  assert.equal(pdfFilename('exercices/feuilles/langages/td-kleene.typ', 'enonce'), 'td-kleene.pdf');
+  assert.equal(pdfFilename('exercices/feuilles/langages/td-kleene.typ', 'corrige'), 'td-kleene-cor.pdf');
+  assert.equal(pdfFilename(exercise.fichier, 'corrige'), exercise.fichier.split('/').at(-1)!.replace('.typ', '-cor.pdf'));
+});
+test('aperçu : modèles et variantes cohérents avec les exports Python, sans PDF intermédiaire', () => {
+  const devoirArgs = previewArguments('/bank', 'exercices/devoirs/2026-2027/ds-1.typ', 'corrige', true);
+  assert.equal(devoirArgs.at(-1), '/bank/exercices/devoirs/2026-2027/ds-1.typ');
+  assert.ok(devoirArgs.includes('corrige=true'));
+  assert.ok(!devoirArgs.some(arg => arg.startsWith('exercice=')));
+  const exerciseArgs = previewArguments('/bank', exercise.fichier, 'corrige');
+  assert.ok(exerciseArgs.includes('corrige=true'));
+  assert.ok(exerciseArgs.includes(`exercice=/${exercise.fichier}`));
+  assert.equal(exerciseArgs.at(-1), '/bank/templates/fiche.typ');
+  const sheetArgs = previewArguments('/bank', 'exercices/feuilles/langages/td.typ', 'enonce', true);
+  assert.equal(sheetArgs.at(-1), '/bank/exercices/feuilles/langages/td.typ');
+  assert.equal(sheetArgs.includes('templates/fiche.typ'), false);
+});
+test('plan, vocabulaire et création à partir des modèles Typst', () => {
+  const source = '#let ex = exercice(\n  meta: (\n    titre: "Exemple",\n    chapitres: (),\n    algorithmes: (),\n    structures: (),\n    langages: (),\n    niveaux: (),\n    difficulte: 2,\n    duree: none,\n    concours: none,\n  ),\n  contenu: (\n    // question([Commentaire ignoré])\n    partie("I", "Test", contenu: (question([Une question ?]),)),\n  ),\n)';
+  assert.equal(outline(source).find(item => item.kind === 'partie')?.children?.length, 1);
+  assert.equal(outline(source).find(item => item.kind === 'partie')?.children?.[0].title, '1. Une question ?');
+  assert.deepEqual(vocabulary('#let chapitres-programme = (\n// "ignoré"\n"graphes", "logique",\n)', 'chapitres-programme'), ['graphes', 'logique']);
+  const created = exerciseFromTemplate(source, { title: 'Titre "cité"', chapters: ['graphes'], algorithms: [], structures: [], languages: ['C'], levels: ['MPI'], difficulty: 3, minutes: 90 });
+  assert.ok(created.includes('titre: "Titre \\"cité\\"",'.replaceAll('\\\\', '\\')));
+  assert.ok(created.includes('duree: (1, 30),'));
+  assert.equal(outline(created).filter(item => item.kind === 'question').length, 1);
+  assert.ok(!created.includes('Une question ?'));
+  const annotated = '/// Aide du modèle\n/* Bloc /* imbriqué */ à retirer */\n#let lien = "https://example.org/*texte*/"\n#let code = `// commentaire de code`\n' + source.replace('  meta: (', '  meta: ( // Métadonnées du modèle').replace('    concours: none,', '    concours: none,\n    // Champs supplémentaires libres') + '\n// Fin du modèle\n';
+  const clean = exerciseFromTemplate(annotated, { title: 'SQL // titre', chapters: [], algorithms: [], structures: [], languages: ['SQL'], levels: ['MPI'], difficulty: 1, minutes: null });
+  for (const comment of ['Aide du modèle', 'imbriqué', 'Métadonnées du modèle', 'Champs supplémentaires libres', 'Fin du modèle']) assert.ok(!clean.includes(comment));
+  assert.ok(clean.includes('"https://example.org/*texte*/"'));
+  assert.ok(clean.includes('`// commentaire de code`'));
+  assert.ok(clean.includes('"SQL // titre"'));
+  const minimal = source.replace(/^.*(?:algorithmes|structures|langages|concours):.*\n/gm, '');
+  const enriched = exerciseFromTemplate(minimal, { title: 'Minimal', chapters: ['graphes'], algorithms: [], structures: [], languages: ['OCaml'], levels: ['MPI'], difficulty: 2, minutes: 20 });
+  assert.ok(enriched.includes('langages: ("OCaml",),'));
+  assert.ok(enriched.includes('concours: none,'));
+  const sheet = sheetFromTemplate('#import "/templates/exercice.typ": ex\n#show: feuille.with(\n  titre: "TD",\n  exercices: (ex,),\n)\n', 'Feuille', [exercise.fichier, 'exercices/banque/graphes/test.typ']);
+  assert.ok(sheet.includes('ex as ex2'));
+  assert.ok(sheet.includes('exercices: (ex1, ex2,),'));
+});
+test('parties imbriquées : les questions suivantes ne restent pas dans une partie fermée', () => {
+  const items = outline('partie("I", "Parent", contenu: (\npartie("A", "Enfant", contenu: (question([Alpha]),)),\nquestion([Beta]),)),\nquestion([Gamma])');
+  assert.equal(items.length, 2);
+  assert.equal(items[0].children?.length, 2);
+  assert.equal(items[0].children?.[0].children?.[0].title, '1. Alpha');
+  assert.equal(items[0].children?.[1].title, '2. Beta');
+  assert.equal(items[1].title, '3. Gamma');
+});
+test('arborescence : dossiers imbriqués et fichiers de même nom dans des dossiers différents', () => {
+  const files = ['b/test.typ', 'a/nested/test.typ', 'a/test.typ', 'root.typ'];
+  const tree = hierarchy(files, value => value);
+  assert.equal(tree.length, 3);
+  assert.ok(isFolder(tree[0]));
+  assert.equal(tree[0].title, 'a');
+  assert.equal(tree[0].children.length, 2);
+  assert.equal(tree[2], 'root.typ');
+});
+
+test('titre de feuille : feuille.with prime sur les exercices locaux', () => {
+  const source = '#let local = exercice(meta: (titre: "Algorithme de déterminisation", niveaux: ("MP",)))\n#show: feuille.with(titre: "TD : Automates", niveau: "MPI", exercices: (local,))';
+  const meta = sourceMetadata(source, 'exercices/feuilles/langages/td-automate.typ');
+  assert.equal(meta.titre, 'TD : Automates');
+  assert.deepEqual(meta.niveaux, ['MPI']);
+  assert.deepEqual(meta.chapitres, []);
+  assert.equal(sourceMetadata(source, 'exercices/devoirs/2026-2027/ds.typ').titre, 'TD : Automates');
+});
+
+test('composition : protéger le barème personnalisé, conserver les barèmes hérités', () => {
+  const source = 'exercices/devoirs/2026-2027/ds.typ';
+  for (const bareme of ['(1, 2,)', 'calcul()', 'none + autre']) {
+    const text = editableSheet.replace('titre: "TD",', `titre: "TD", bareme: ${bareme},`);
+    for (const operation of [{ index: 0 }, { index: 1, direction: -1 }, { add: 'exercices/c.typ' }]) {
+      assert.throws(() => editSheet(text, source, operation), /Barème personnalisé/);
+    }
+  }
+  const inherited = editableSheet.replace('titre: "TD",', 'titre: "TD", bareme: none,');
+  assert.equal(sheetList(editSheet(inherited, source, { index: 0 }), source).entries.length, 1);
+  assert.ok(editSheet(editableSheet + '\n// bareme: (1,)', source, { index: 0 }));
+});
+
+test('documents : type déclaré, indépendant du dossier, anciens appels compatibles', () => {
+  assert.equal(outline('question(points: 1.5, [Question notée], solution: [Réponse])')[0].title, '1. Question notée');
+  for (const source of ['ds.typ', 'classe/graphes/ds.typ', 'exercices/test.typ']) {
+    assert.deepEqual(identify('#show: feuille.with(type: "devoir", exercices: ())', source), { kind: 'document', type: 'devoir', direct: true });
+  }
+  assert.equal(identify('#show: feuille.with(type: "colle", exercices: ())')?.type, 'colle');
+  assert.equal(identify('#show: feuille.with(exercices: ())')?.type, 'td');
+  assert.equal(identify('#let ex = exercice()', 'racine.typ')?.kind, 'exercice');
+  assert.deepEqual(identify('#let ex = exercice()', 'exercices/concours/24/extrait.typ'), { kind: 'exercice', direct: false });
+  assert.equal(identify('#import "/sujet.typ": ex', 'alias.typ')?.kind, 'exercice');
+  assert.equal(identify('#import "/sujet.typ": autre as ex', 'alias.typ')?.kind, 'exercice');
+  for (const source of ['// #show: feuille.with()', '/* #let ex = exercice() */', '`#let ex = exercice()`', '#let texte = "#show: feuille.with()"']) assert.equal(identify(source), undefined);
+  const feuille = editableSheet.replace('feuille.with(', 'feuille.with(type: "devoir",');
+  assert.equal(sheetList(editSheet(feuille, 'libre.typ', { index: 0 }), 'libre.typ').entries.length, 1);
+});
+
+
+test('recherche : fichiers ouverts, historique récent, puis titres', () => {
+  const opened = new Set(['/bank/a.typ', '/bank/z.typ']);
+  const recent = ['/bank/b.typ', '/bank/z.typ', '/bank/c.typ'];
+  const files = ['/bank/d.typ', '/bank/c.typ', '/bank/b.typ', '/bank/a.typ', '/bank/z.typ', '/other/z.typ'];
+  files.sort((a, b) => searchPriority(a, opened, recent) - searchPriority(b, opened, recent) || a.localeCompare(b));
+  assert.deepEqual(files, ['/bank/z.typ', '/bank/a.typ', '/bank/b.typ', '/bank/c.typ', '/bank/d.typ', '/other/z.typ']);
+  assert.equal(searchPriority('/bank/a.typ', opened, []), 0);
+  assert.equal(searchPriority('/bank/b.typ', opened, []), 1);
+});

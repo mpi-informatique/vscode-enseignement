@@ -1,0 +1,7 @@
+node_modules/
+dist/
+releases/
+.vscode-test/
+.direnv/
+*.vsix
+.DS_Store

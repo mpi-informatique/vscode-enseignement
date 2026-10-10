@@ -1,0 +1,648 @@
+{
+  "name": "vscode-enseignement",
+  "displayName": "Enseignement Typst",
+  "icon": "media/icon-sidebar.png",
+  "description": "Rechercher, composer et compiler les ressources Typst de mpi-informatique/enseignement et enseignement-prive.",
+  "version": "0.1.0",
+  "publisher": "qfortier",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "workspaceContains:scripts/build.py",
+    "workspaceContains:templates/**/*.typ"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "La compilation exécute les outils de la banque."
+    },
+    "virtualWorkspaces": {
+      "supported": false
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "mpiEnseignement.addCurrent",
+        "title": "Ajouter à la document en cours",
+        "category": "Enseignement Typst",
+        "icon": "$(add)"
+      },
+      {
+        "command": "mpiEnseignement.memberUp",
+        "title": "Monter dans la document",
+        "category": "Enseignement Typst",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "mpiEnseignement.memberDown",
+        "title": "Descendre dans la document",
+        "category": "Enseignement Typst",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "mpiEnseignement.memberRemove",
+        "title": "Retirer de la document",
+        "category": "Enseignement Typst",
+        "icon": "$(close)"
+      },
+      {
+        "command": "mpiEnseignement.deleteSource",
+        "title": "Supprimer le fichier…",
+        "category": "Enseignement Typst",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "mpiEnseignement.newFolderLibrary",
+        "title": "Ajouter un dossier",
+        "category": "Enseignement Typst",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "mpiEnseignement.newFolderSheets",
+        "title": "Ajouter un dossier",
+        "category": "Enseignement Typst",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "mpiEnseignement.searchSheets",
+        "title": "Rechercher des documents",
+        "category": "Enseignement Typst",
+        "icon": "$(search)"
+      },
+      {
+        "command": "mpiEnseignement.filtersSheets",
+        "title": "Filtrer les documents",
+        "category": "Enseignement Typst",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "mpiEnseignement.resetSheets",
+        "title": "Annuler la recherche et les filtres",
+        "category": "Enseignement Typst",
+        "icon": "$(close)"
+      },
+      {
+        "command": "mpiEnseignement.newExercise",
+        "title": "Ajouter un exercice",
+        "category": "Enseignement Typst",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "mpiEnseignement.newSheet",
+        "title": "Créer une document",
+        "category": "Enseignement Typst",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "mpiEnseignement.toggleLibrary",
+        "title": "Basculer dossiers / liste",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.toggleSheets",
+        "title": "Basculer dossiers / liste des documents",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.search",
+        "title": "Rechercher des exercices",
+        "category": "Enseignement Typst",
+        "icon": "$(search)"
+      },
+      {
+        "command": "mpiEnseignement.filters",
+        "title": "Filtrer les exercices",
+        "category": "Enseignement Typst",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "mpiEnseignement.reset",
+        "title": "Annuler la recherche et les filtres",
+        "category": "Enseignement Typst",
+        "icon": "$(close)"
+      },
+      {
+        "command": "mpiEnseignement.refresh",
+        "title": "Régénérer le catalogue",
+        "category": "Enseignement Typst",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "mpiEnseignement.source",
+        "title": "Afficher le fichier",
+        "category": "Enseignement Typst",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "mpiEnseignement.enonce",
+        "title": "Compiler et afficher l'énoncé",
+        "category": "Enseignement Typst",
+        "icon": {
+          "light": "media/preview-light.svg",
+          "dark": "media/preview-dark.svg"
+        }
+      },
+      {
+        "command": "mpiEnseignement.corrige",
+        "title": "Compiler et afficher le corrigé",
+        "category": "Enseignement Typst",
+        "icon": {
+          "light": "media/preview-corrected.svg",
+          "dark": "media/preview-corrected.svg"
+        }
+      },
+      {
+        "command": "mpiEnseignement.compileBoth",
+        "title": "Compiler l'énoncé et le corrigé",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.sync",
+        "title": "Rejoindre le curseur dans l'aperçu",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.output",
+        "title": "Afficher le journal de compilation",
+        "category": "Enseignement Typst",
+        "icon": "$(output)"
+      },
+      {
+        "command": "mpiEnseignement.openPanel",
+        "title": "Ouvrir le panneau Enseignement Typst",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.collapsecurrent",
+        "title": "Tout replier",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.collapselibrary",
+        "title": "Tout replier",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.collapsesheets",
+        "title": "Tout replier",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.downloadCorrige",
+        "title": "Télécharger le corrigé (PDF)",
+        "category": "Enseignement Typst"
+      },
+      {
+        "command": "mpiEnseignement.downloadEnonce",
+        "title": "Télécharger l'énoncé (PDF)",
+        "category": "Enseignement Typst"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "mpiEnseignement",
+          "title": "Enseignement Typst",
+          "icon": "media/library.svg"
+        }
+      ]
+    },
+    "views": {
+      "mpiEnseignement": [
+        {
+          "id": "mpiEnseignement.current",
+          "name": "Fichier"
+        },
+        {
+          "id": "mpiEnseignement.library",
+          "name": "Exercices"
+        },
+        {
+          "id": "mpiEnseignement.sheets",
+          "name": "Documents"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "mpiEnseignement.current",
+        "contents": "Ouvrez un fichier Typst pour afficher son plan."
+      },
+      {
+        "view": "mpiEnseignement.library",
+        "contents": "Ouvrir enseignement ou enseignement-prive.\n[Régénérer le catalogue](command:mpiEnseignement.refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "mpiEnseignement.newFolderLibrary",
+          "when": "view == mpiEnseignement.library",
+          "group": "navigation@5"
+        },
+        {
+          "command": "mpiEnseignement.newFolderSheets",
+          "when": "view == mpiEnseignement.sheets",
+          "group": "navigation@5"
+        },
+        {
+          "command": "mpiEnseignement.searchSheets",
+          "when": "view == mpiEnseignement.sheets",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mpiEnseignement.filtersSheets",
+          "when": "view == mpiEnseignement.sheets",
+          "group": "navigation@2"
+        },
+        {
+          "command": "mpiEnseignement.resetSheets",
+          "when": "view == mpiEnseignement.sheets && mpiEnseignement.searchActive.sheets",
+          "group": "navigation@3"
+        },
+        {
+          "command": "mpiEnseignement.search",
+          "when": "view == mpiEnseignement.library",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mpiEnseignement.filters",
+          "when": "view == mpiEnseignement.library",
+          "group": "navigation@2"
+        },
+        {
+          "command": "mpiEnseignement.toggleLibrary",
+          "when": "view == mpiEnseignement.library",
+          "group": "display@2"
+        },
+        {
+          "command": "mpiEnseignement.newExercise",
+          "when": "view == mpiEnseignement.library",
+          "group": "navigation@4"
+        },
+        {
+          "command": "mpiEnseignement.refresh",
+          "when": "view == mpiEnseignement.library"
+        },
+        {
+          "command": "mpiEnseignement.reset",
+          "when": "view == mpiEnseignement.library && mpiEnseignement.searchActive.library",
+          "group": "navigation@3"
+        },
+        {
+          "command": "mpiEnseignement.output",
+          "when": "view == mpiEnseignement.library"
+        },
+        {
+          "command": "mpiEnseignement.newSheet",
+          "when": "view == mpiEnseignement.sheets",
+          "group": "navigation@4"
+        },
+        {
+          "command": "mpiEnseignement.toggleSheets",
+          "when": "view == mpiEnseignement.sheets",
+          "group": "display@2"
+        },
+        {
+          "command": "mpiEnseignement.collapsecurrent",
+          "when": "view == mpiEnseignement.current",
+          "group": "display@1"
+        },
+        {
+          "command": "mpiEnseignement.collapselibrary",
+          "when": "view == mpiEnseignement.library",
+          "group": "display@1"
+        },
+        {
+          "command": "mpiEnseignement.collapsesheets",
+          "when": "view == mpiEnseignement.sheets",
+          "group": "display@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "mpiEnseignement.addCurrent",
+          "when": "viewItem == exercice",
+          "group": "inline@3"
+        },
+        {
+          "command": "mpiEnseignement.addCurrent",
+          "when": "viewItem == exercice",
+          "group": "selection@1"
+        },
+        {
+          "command": "mpiEnseignement.memberUp",
+          "when": "viewItem == sheetMember",
+          "group": "inline@1"
+        },
+        {
+          "command": "mpiEnseignement.memberDown",
+          "when": "viewItem == sheetMember",
+          "group": "inline@2"
+        },
+        {
+          "command": "mpiEnseignement.memberRemove",
+          "when": "viewItem == sheetMember",
+          "group": "inline@3"
+        },
+        {
+          "command": "mpiEnseignement.memberUp",
+          "when": "viewItem == sheetMember",
+          "group": "composition@1"
+        },
+        {
+          "command": "mpiEnseignement.memberDown",
+          "when": "viewItem == sheetMember",
+          "group": "composition@2"
+        },
+        {
+          "command": "mpiEnseignement.memberRemove",
+          "when": "viewItem == sheetMember",
+          "group": "composition@3"
+        },
+        {
+          "command": "mpiEnseignement.deleteSource",
+          "when": "viewItem == exercice || viewItem == typstSource",
+          "group": "files@2"
+        },
+        {
+          "command": "mpiEnseignement.newExercise",
+          "when": "view == mpiEnseignement.library && viewItem == sourceFolder",
+          "group": "files@1"
+        },
+        {
+          "command": "mpiEnseignement.newFolderLibrary",
+          "when": "view == mpiEnseignement.library && viewItem == sourceFolder",
+          "group": "files@2"
+        },
+        {
+          "command": "mpiEnseignement.newFolderSheets",
+          "when": "view == mpiEnseignement.sheets && viewItem == sourceFolder",
+          "group": "files@2"
+        },
+        {
+          "command": "mpiEnseignement.enonce",
+          "when": "viewItem == exercice || viewItem == typstSource",
+          "group": "inline@1"
+        },
+        {
+          "command": "mpiEnseignement.corrige",
+          "when": "viewItem == exercice || viewItem == typstSource",
+          "group": "inline@2"
+        },
+        {
+          "command": "mpiEnseignement.newSheet",
+          "when": "view == mpiEnseignement.sheets && viewItem == sourceFolder",
+          "group": "files@1"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "mpiEnseignement.enonce",
+          "when": "resourceExtname == .typ",
+          "group": "navigation@8"
+        },
+        {
+          "command": "mpiEnseignement.corrige",
+          "when": "resourceExtname == .typ",
+          "group": "navigation@9"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "mpiEnseignement.enonce",
+          "when": "resourceExtname == .typ",
+          "group": "mpiEnseignement@1"
+        },
+        {
+          "command": "mpiEnseignement.corrige",
+          "when": "resourceExtname == .typ",
+          "group": "mpiEnseignement@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "mpiEnseignement.addCurrent",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.memberUp",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.memberDown",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.memberRemove",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.deleteSource",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.newFolderLibrary",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.newFolderSheets",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.resetSheets",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.toggleLibrary",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.toggleSheets",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.reset",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.refresh",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.source",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.compileBoth",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.sync",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.output",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.collapsecurrent",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.collapselibrary",
+          "when": "false"
+        },
+        {
+          "command": "mpiEnseignement.collapsesheets",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Enseignement Typst",
+      "properties": {
+        "mpiEnseignement.previewTheme": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "light",
+            "dark"
+          ],
+          "default": "auto",
+          "scope": "resource",
+          "description": "Thème des pages : suivre VS Code, clair ou sombre. Les images conservent leurs couleurs."
+        },
+        "mpiEnseignement.bankPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Chemin du dépôt de contenu. Vide : racine du dossier ouvert. Ajouter les dépôts public et privé à un même espace de travail pour les consulter ensemble."
+        },
+        "mpiEnseignement.execution": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "nix",
+            "direct"
+          ],
+          "default": "auto",
+          "scope": "resource",
+          "description": "Auto utilise Nix si flake.nix existe, sinon Python directement. Ce choix s’applique aussi aux dépendances des aperçus Tinymist."
+        },
+        "mpiEnseignement.nixPath": {
+          "type": "string",
+          "default": "nix",
+          "scope": "resource",
+          "description": "Exécutable Nix ; les installations standard macOS sont détectées."
+        },
+        "mpiEnseignement.pythonPath": {
+          "type": "string",
+          "default": "python3",
+          "scope": "resource",
+          "description": "Exécutable Python dans l'environnement choisi. Les commandes appellent scripts/build.py."
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "mpiEnseignement.search",
+        "key": "f2",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.searchSheets",
+        "key": "shift+f2",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.filters",
+        "key": "f3",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.filtersSheets",
+        "key": "shift+f3",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.newExercise",
+        "key": "f4",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.newSheet",
+        "key": "shift+f4",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.corrige",
+        "key": "f6",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.downloadCorrige",
+        "key": "shift+f6",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.enonce",
+        "key": "f5",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.downloadEnonce",
+        "key": "shift+f5",
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+      },
+      {
+        "command": "mpiEnseignement.reset",
+        "key": "escape",
+        "when": "focusedView == mpiEnseignement.library && mpiEnseignement.searchActive.library && !inputFocus"
+      },
+      {
+        "command": "mpiEnseignement.resetSheets",
+        "key": "escape",
+        "when": "focusedView == mpiEnseignement.sheets && mpiEnseignement.searchActive.sheets && !inputFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "tsc --noEmit",
+    "test": "npm run check && npm run build && node --test dist/core.test.js",
+    "test:integration": "npm run build && node scripts/integration.mjs",
+    "vscode:prepublish": "npm run check && npm run build",
+    "package": "vsce package --no-dependencies --skip-license --out releases/"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.3.289",
+    "vscode-jsonrpc": "8.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.4",
+    "@types/vscode": "1.100.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mpi-informatique/vscode-enseignement.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mpi-informatique/vscode-enseignement/issues"
+  },
+  "homepage": "https://github.com/mpi-informatique/vscode-enseignement#readme"
+}
