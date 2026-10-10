@@ -33,25 +33,25 @@
     "commands": [
       {
         "command": "mpiEnseignement.addCurrent",
-        "title": "Ajouter à la document en cours",
+        "title": "Ajouter au document en cours",
         "category": "Enseignement Typst",
         "icon": "$(add)"
       },
       {
         "command": "mpiEnseignement.memberUp",
-        "title": "Monter dans la document",
+        "title": "Monter dans le document",
         "category": "Enseignement Typst",
         "icon": "$(arrow-up)"
       },
       {
         "command": "mpiEnseignement.memberDown",
-        "title": "Descendre dans la document",
+        "title": "Descendre dans le document",
         "category": "Enseignement Typst",
         "icon": "$(arrow-down)"
       },
       {
         "command": "mpiEnseignement.memberRemove",
-        "title": "Retirer de la document",
+        "title": "Retirer du document",
         "category": "Enseignement Typst",
         "icon": "$(close)"
       },
@@ -99,7 +99,7 @@
       },
       {
         "command": "mpiEnseignement.newSheet",
-        "title": "Créer une document",
+        "title": "Créer un document",
         "category": "Enseignement Typst",
         "icon": "$(file-add)"
       },
@@ -620,10 +620,11 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "tsc --noEmit",
-    "test": "npm run check && npm run build && node --test dist/core.test.js",
+    "test": "npm run check && npm run build && node --test dist/core.test.js test/release.test.mjs",
     "test:integration": "npm run build && node scripts/integration.mjs",
     "vscode:prepublish": "npm run check && npm run build",
-    "package": "vsce package --no-dependencies --skip-license --out releases/"
+    "package": "vsce package --no-dependencies --skip-license --out releases/",
+    "publish:marketplace": "vsce publish --no-dependencies --skip-license --skip-duplicate"
   },
   "dependencies": {
     "pdfjs-dist": "6.3.289",

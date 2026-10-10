@@ -2,6 +2,8 @@
 
 ## 0.1.0
 
+- Automatiser la publication Marketplace et des VSIX GitHub à partir des tags stables.
+
 - Créer l'extension Enseignement Typst pour les dépôts `enseignement` et `enseignement-prive`.
 - Remplacer Make par les scripts Python des dépôts, avec Nix automatique.
 - Adapter la découverte, les modèles et les exports aux nouveaux chemins, dont les PDF des copies privées.

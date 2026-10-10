@@ -1,0 +1,58 @@
+name: Publication Marketplace
+on:
+  push:
+    tags: ['v[0-9]*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag existant à publier, par exemple v0.1.0
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: marketplace-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
+      - name: Vérifier la version et son appartenance à main
+        run: |
+          test "$(git describe --tags --exact-match HEAD)" = "$RELEASE_TAG"
+          git merge-base --is-ancestor HEAD origin/main
+          nix develop path:. -c node scripts/check-release.mjs "$RELEASE_TAG"
+      - run: nix develop path:. -c npm ci
+      - run: nix develop path:. -c npm test
+      - run: nix develop path:. -c npm run package
+      - name: Publier le VSIX sur le Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          package="releases/vscode-enseignement-${RELEASE_TAG#v}.vsix"
+          if [ -n "$VSCE_PAT" ]; then
+            nix develop path:. -c npm run publish:marketplace -- --packagePath "$package"
+          else
+            nix develop path:. -c npm run publish:marketplace -- --packagePath "$package" --oidc
+          fi
+      - name: Joindre le VSIX à la version GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          package="releases/vscode-enseignement-${RELEASE_TAG#v}.vsix"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$package" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$package" --verify-tag --title "$RELEASE_TAG" --generate-notes
+          fi

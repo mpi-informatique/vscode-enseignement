@@ -15,3 +15,5 @@
 `build.mjs` utilise esbuild pour produire `dist/extension.js`, les tests et les ressources du lecteur PDF. `integration.mjs` lance les suites dans un profil VS Code temporaire et nettoie ce profil à la fin. Les données fictives des tests restent dans des répertoires temporaires.
 
 La logique de compilation pédagogique reste dans les dépôts de contenu : l'extension appelle leur `scripts/build.py`, sans recopier leurs règles.
+
+`check-release.mjs vX.Y.Z` vérifie la concordance entre le tag et les versions des deux manifestes avant publication sur le Marketplace. Le workflow de publication appelle ensuite les mêmes tests et commandes de construction que le développement local.
