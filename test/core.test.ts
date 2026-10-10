@@ -9,6 +9,7 @@ import { sheetList, editSheet, sourceMetadata } from '../src/sheet-model';
 import { bridgeHtml } from '../src/preview-bridge';
 import { creationPath, contestFromTemplate } from '../src/typst';
 import { Refresh } from '../src/refresh';
+import { bankCandidates } from '../src/discovery';
 import { copyDirectory, copyInputs } from '../src/copy-inputs';
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
@@ -274,7 +275,6 @@ test('documents : type déclaré, indépendant du dossier, anciens appels compat
   assert.equal(sheetList(editSheet(feuille, 'libre.typ', { index: 0 }), 'libre.typ').entries.length, 1);
 });
 
-
 test('recherche : fichiers ouverts, historique récent, puis titres', () => {
   const opened = new Set(['/bank/a.typ', '/bank/z.typ']);
   const recent = ['/bank/b.typ', '/bank/z.typ', '/bank/c.typ'];
@@ -283,4 +283,24 @@ test('recherche : fichiers ouverts, historique récent, puis titres', () => {
   assert.deepEqual(files, ['/bank/z.typ', '/bank/a.typ', '/bank/b.typ', '/bank/c.typ', '/bank/d.typ', '/other/z.typ']);
   assert.equal(searchPriority('/bank/a.typ', opened, []), 0);
   assert.equal(searchPriority('/bank/b.typ', opened, []), 1);
+});
+
+test('découverte : dépôt ouvert, dossier parent et chemin explicite', async () => {
+  const temporary = await mkdtemp(path.join(tmpdir(), 'mpi-discovery-'));
+  try {
+    const roots = ['enseignement', 'enseignement-prive', 'autre-banque'].map(name => path.join(temporary, name));
+    for (const root of roots) {
+      await mkdir(path.join(root, 'scripts'), { recursive: true });
+      await writeFile(path.join(root, 'scripts/build.py'), '');
+    }
+    await mkdir(path.join(temporary, 'sans-banque'));
+    assert.deepEqual((await bankCandidates(temporary)).sort(), [...roots].sort());
+    assert.deepEqual(await bankCandidates(roots[0]), [roots[0]]);
+    assert.deepEqual(await bankCandidates(temporary, 'enseignement-prive'), [roots[1]]);
+    assert.deepEqual(await bankCandidates(temporary, roots[2]), [roots[2]]);
+    assert.deepEqual(await bankCandidates(temporary, 'sans-banque'), []);
+    await mkdir(path.join(roots[0], 'imbrique/scripts'), { recursive: true });
+    await writeFile(path.join(roots[0], 'imbrique/scripts/build.py'), '');
+    assert.deepEqual(await bankCandidates(roots[0]), [roots[0]], 'Ne pas chercher dans un dépôt déjà reconnu');
+  } finally { await rm(temporary, { recursive: true, force: true }); }
 });

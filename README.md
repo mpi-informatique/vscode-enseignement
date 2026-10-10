@@ -8,7 +8,7 @@ Après sa première publication, installer [Enseignement Typst depuis le Marketp
 
 Pour une installation manuelle, utiliser le VSIX des [versions GitHub](https://github.com/mpi-informatique/vscode-enseignement/releases) ou de `releases/` avec **Extensions → … → Installer à partir d'un VSIX**. Une installation en VSIX désactive par défaut la mise à jour automatique : la réactiver après disponibilité sur le Marketplace.
 
-Ouvrir ensuite le dépôt public ou privé. Pour les consulter ensemble, ouvrir `enseignement-prive/enseignement.code-workspace`.
+Ouvrir ensuite le dépôt public ou privé, ou leur dossier parent : les dépôts enfants immédiats sont détectés automatiquement. Pour les consulter ensemble, ouvrir `enseignement-prive/enseignement.code-workspace`.
 
 L'identifiant est `qfortier.vscode-enseignement`, les réglages utilisent `mpiEnseignement.*`. Désactiver l'ancienne extension Exercices Typst dans cet espace de travail pour éviter les raccourcis en double. Les réglages personnalisés de `mpiExercices.*` peuvent être reportés vers le nouveau préfixe : `makePath` devient `pythonPath`.
 

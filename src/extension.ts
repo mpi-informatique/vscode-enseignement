@@ -18,6 +18,7 @@ import { Refresh } from './refresh';
 import { RecentSources, searchPicker } from './search';
 import { errorStatus } from './errors';
 import { mask } from './typst';
+import { bankCandidates } from './discovery';
 
 export async function activate(context: vscode.ExtensionContext) {
   const runner = new Runner();
@@ -84,6 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
       return item;
     }));
+    if (disposed || !banks.includes(bank)) return;
     browser.entries = [...browser.entries.filter(entry => entry.bank.root !== bank.root), ...sources.filter((source): source is Source => !!source)];
     update();
   }
@@ -103,42 +105,42 @@ export async function activate(context: vscode.ExtensionContext) {
     for (const folder of vscode.workspace.workspaceFolders ?? []) {
       if (folder.uri.scheme !== 'file') continue;
       const configured = vscode.workspace.getConfiguration('mpiEnseignement', folder.uri).get<string>('bankPath', '');
-      const candidate = path.resolve(folder.uri.fsPath, configured || '.');
-      if (!existsSync(path.join(candidate, 'scripts/build.py'))) continue;
-      const project = { root: candidate, name: path.basename(candidate), scope: folder.uri };
-      if (!hasCatalogue(project) && !(await documentTemplates(project)).length) continue;
-      const root = await realpath(candidate);
-      if (seen.has(root)) continue; seen.add(root);
-      const bank: Bank = { root, name: path.basename(root), scope: folder.uri }; banks.push(bank);
-      try {
-        if (hasCatalogue(bank) && !existsSync(path.join(root, 'build/catalogue.json'))) await runner.run(bank, ['catalogue']);
-        await load(bank);
-      } catch (error) { report(error); await scan(bank, library); }
-      await scan(bank, sheets);
-      const catalogue = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(root), 'build/catalogue.json'));
-      let timer: NodeJS.Timeout | undefined;
-      const reload = () => { clearTimeout(timer); timer = setTimeout(() => { void load(bank).catch(report); }, 200); };
-      catalogue.onDidChange(reload); catalogue.onDidCreate(reload);
-      watchers.push(catalogue, { dispose: () => clearTimeout(timer) });
-      const refresh = new Refresh(async () => {
-        if (hasCatalogue(bank)) await runner.run(bank, ['catalogue']);
-        if (disposed || !banks.includes(bank)) return;
-        await load(bank);
+      for (const candidate of await bankCandidates(folder.uri.fsPath, configured)) {
+        const project = { root: candidate, name: path.basename(candidate), scope: folder.uri };
+        if (!hasCatalogue(project) && !(await documentTemplates(project)).length) continue;
+        const root = await realpath(candidate);
+        if (seen.has(root)) continue; seen.add(root);
+        const bank: Bank = { root, name: path.basename(root), scope: folder.uri }; banks.push(bank);
+        try {
+          if (hasCatalogue(bank) && !existsSync(path.join(root, 'build/catalogue.json'))) await runner.run(bank, ['catalogue']);
+          await load(bank);
+        } catch (error) { report(error); await scan(bank, library); }
         await scan(bank, sheets);
-      }, report);
-      // Imports can affect computed metadata: conservatively track all Typst sources.
-      const sources = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(root), '**/*.typ'));
-      const mark = (uri: vscode.Uri) => { if (!path.relative(root, uri.fsPath).split(path.sep).includes('build')) refresh.mark(); };
-      sources.onDidChange(mark);
-      sources.onDidCreate(mark);
-      sources.onDidDelete(mark);
-      watchers.push(refresh, sources);
-      for (const browser of browsers) {
-        const files = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(root), '**/*.typ'));
-        const rescan = () => { void scan(bank, browser).catch(report); };
-        files.onDidCreate(rescan); files.onDidDelete(rescan);
-        if (browser !== library) files.onDidChange(rescan);
-        watchers.push(files);
+        const catalogue = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(root), 'build/catalogue.json'));
+        let timer: NodeJS.Timeout | undefined;
+        const reload = () => { clearTimeout(timer); timer = setTimeout(() => { void load(bank).catch(report); }, 200); };
+        catalogue.onDidChange(reload); catalogue.onDidCreate(reload);
+        watchers.push(catalogue, { dispose: () => clearTimeout(timer) });
+        const refresh = new Refresh(async () => {
+          if (hasCatalogue(bank)) await runner.run(bank, ['catalogue']);
+          if (disposed || !banks.includes(bank)) return;
+          await load(bank);
+          await scan(bank, sheets);
+        }, report);
+        // Imports can affect computed metadata: conservatively track all Typst sources.
+        const sources = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(root), '**/*.typ'));
+        const mark = (uri: vscode.Uri) => { if (!path.relative(root, uri.fsPath).split(path.sep).includes('build')) refresh.mark(); };
+        sources.onDidChange(mark);
+        sources.onDidCreate(mark);
+        sources.onDidDelete(mark);
+        watchers.push(refresh, sources);
+        for (const browser of browsers) {
+          const files = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(root), '**/*.typ'));
+          const rescan = () => { void scan(bank, browser).catch(report); };
+          files.onDidCreate(rescan); files.onDidDelete(rescan);
+          if (browser !== library) files.onDidChange(rescan);
+          watchers.push(files);
+        }
       }
     }
     for (const browser of browsers) browser.changed.fire();

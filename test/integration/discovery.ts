@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import * as path from 'node:path';
 import assert from 'node:assert/strict';
 import { identify } from '../../src/documents';
+import { mkdtemp, mkdir, writeFile, realpath, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { until } from './helpers';
 
 export async function run(api: any, extension: vscode.Extension<any>): Promise<void> {
   const manifest = extension.packageJSON.contributes;
@@ -28,5 +31,40 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
   assert.ok(nestedSheet, 'Une feuille existante pour tester reveal');
   const revealed = await api.revealSheet(path.relative(process.env.MPI_ENSEIGNEMENT_ROOT!, nestedSheet.fsPath));
   assert.equal(revealed.source, path.relative(process.env.MPI_ENSEIGNEMENT_ROOT!, nestedSheet.fsPath), 'Sélection réelle de la feuille avec TreeView.reveal');
+  await parentWorkspace(api);
   console.log('Découverte et commandes vérifiées.');
+}
+
+async function parentWorkspace(api: any): Promise<void> {
+  const parent = await realpath(await mkdtemp(path.join(tmpdir(), 'enseignement-parent-')));
+  const roots = ['enseignement', 'enseignement-prive'].map(name => path.join(parent, name));
+  const entries = () => api.getEntries().filter((entry: { bank: string }) => roots.includes(entry.bank));
+  try {
+    for (const root of roots) {
+      await mkdir(path.join(root, 'scripts'), { recursive: true });
+      await mkdir(path.join(root, 'templates'));
+      await writeFile(path.join(root, 'scripts/build.py'), '');
+      await writeFile(path.join(root, 'templates/td.typ'), '#show: feuille.with(type: "td")');
+      await writeFile(path.join(root, 'exemple.typ'), '#let ex = (titre: "Exercice fictif",)');
+    }
+    assert.ok(vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders!.length, 0, { uri: vscode.Uri.file(parent) }));
+    await until(() => entries().length === 2, 'Les deux dépôts doivent être découverts depuis leur dossier parent');
+    assert.deepEqual(entries().map((entry: { bank: string }) => entry.bank).sort(), [...roots].sort());
+    assert.ok(vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders!.length, 0, { uri: vscode.Uri.file(roots[0]) }));
+    await until(() => !!vscode.workspace.workspaceFolders?.some(folder => folder.uri.fsPath === roots[0]), 'Le dépôt doit être ajouté à l’espace de travail');
+    // The refresh command waits for the queued workspace discovery.
+    await vscode.commands.executeCommand('mpiEnseignement.refresh');
+    assert.equal(entries().length, 2, 'Un dépôt ouvert aussi directement ne doit pas apparaître deux fois');
+  } finally {
+    for (const root of [roots[0], parent]) {
+      const index = vscode.workspace.workspaceFolders?.findIndex(folder => folder.uri.fsPath === root) ?? -1;
+      if (index >= 0) {
+        vscode.workspace.updateWorkspaceFolders(index, 1);
+        await until(() => !vscode.workspace.workspaceFolders?.some(folder => folder.uri.fsPath === root), 'Le dossier doit être retiré de l’espace de travail');
+        await vscode.commands.executeCommand('mpiEnseignement.refresh');
+      }
+    }
+    await until(() => entries().length === 0, 'Les dépôts retirés doivent disparaître');
+    await rm(parent, { recursive: true, force: true });
+  }
 }

@@ -18,6 +18,7 @@
   ],
   "activationEvents": [
     "workspaceContains:scripts/build.py",
+    "workspaceContains:*/scripts/build.py",
     "workspaceContains:templates/**/*.typ"
   ],
   "capabilities": {
@@ -527,7 +528,7 @@
           "type": "string",
           "default": "",
           "scope": "resource",
-          "description": "Chemin du dépôt de contenu. Vide : racine du dossier ouvert. Ajouter les dépôts public et privé à un même espace de travail pour les consulter ensemble."
+          "description": "Chemin du dépôt de contenu. Vide : racine du dossier ouvert ou dépôts enfants immédiats. Ajouter les dépôts public et privé à un même espace de travail pour les consulter ensemble."
         },
         "mpiEnseignement.execution": {
           "type": "string",
