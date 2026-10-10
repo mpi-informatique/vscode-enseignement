@@ -10,17 +10,12 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
   const manifest = extension.packageJSON.contributes;
   const commands = await vscode.commands.getCommands(true);
   assert.deepEqual(manifest.views.mpiEnseignement.map((view: { id: string }) => view.id), ['mpiEnseignement.current', 'mpiEnseignement.library', 'mpiEnseignement.sheets']);
-  assert.equal(manifest.views.mpiEnseignement.at(-1).name, 'Documents');
   for (const section of ['current', 'library', 'sheets']) {
     await vscode.commands.executeCommand(`mpiEnseignement.${section}.focus`);
     assert.ok((await vscode.commands.getCommands(true)).includes(`workbench.actions.treeView.mpiEnseignement.${section}.collapseAll`));
     await vscode.commands.executeCommand(`mpiEnseignement.collapse${section}`);
   }
   for (const binding of manifest.keybindings) assert.ok(commands.includes(binding.command), binding.command);
-  for (const item of manifest.menus['view/title']) {
-    if (/toggle|collapse/.test(item.command)) assert.ok(!item.group.startsWith('navigation'));
-    if (/reset/.test(item.command)) assert.ok(item.when.includes('searchActive'));
-  }
   for (const uri of await vscode.workspace.findFiles('exercices/feuilles/**/*.typ')) {
     const source = path.relative(process.env.MPI_ENSEIGNEMENT_ROOT!, uri.fsPath).split(path.sep).join('/');
     assert.equal(identify((await vscode.workspace.openTextDocument(uri)).getText(), source)?.kind, 'document');

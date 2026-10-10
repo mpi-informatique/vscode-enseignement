@@ -78,7 +78,7 @@ npm run package
 
 Les tests unitaires couvrent la découverte, les métadonnées, les chemins, la composition et les commandes Python/Nix. Les tests d'intégration ouvrent un profil VS Code isolé, utilisent des documents et des copies fictifs, et ne lisent pas les données d'élèves.
 
-Pour une seule suite : `npm run test:integration -- --suite=edition`. Suites : `decouverte`, `edition`, `apercu`, `corrections`, `documents`, `organisation`. Les suites publiques utilisent le clone voisin `../enseignement`. La suite `corrections` nécessite les outils de `../enseignement-prive`, sans en copier les corrections. Les aperçus natifs nécessitent Tinymist installé.
+Pour une seule suite : `npm run test:integration -- --suite=edition`. Suites : `decouverte`, `edition`, `apercu`, `corrections`, `documents`. Les suites publiques utilisent le clone voisin `../enseignement`. La suite `corrections` nécessite les outils de `../enseignement-prive`, sans en copier les corrections. Les aperçus natifs nécessitent Tinymist installé.
 
 Variables de test : `MPI_ENSEIGNEMENT_ROOT` pour le dépôt ouvert, `MPI_PUBLIC_ROOT` pour les outils publics, `MPI_PRIVATE_ROOT` pour les outils privés, `VSCODE_EXECUTABLE` et `TINYMIST_PATH` pour choisir les installations. Consulter [l'organisation du code](scripts/README.md) pour comprendre les différents modules.
 
