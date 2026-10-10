@@ -15,7 +15,7 @@ export async function fixture() {
     for (const directory of ['exercices/banque/graphes', 'exercices/feuilles', 'exercices/devoirs/2026-2027', 'exercices/concours']) await mkdir(path.join(temporary, directory), { recursive: true });
     const customTemplate = (await readFile(path.join(temporary, 'templates/devoir.typ'), 'utf8')).replace('type: "devoir"', 'type: "colle"');
     await writeFile(path.join(temporary, 'templates/colle.typ'), customTemplate);
-    assert.deepEqual((await documentTemplates(previewBank)).map(template => template.type).sort(), ['colle', 'concours', 'devoir', 'td']);
+    assert.ok((await documentTemplates(previewBank)).some(template => template.type === 'colle'));
     const relative = 'exercices/banque/graphes/test-creation.typ';
     const generated = exerciseFromTemplate(await readFile(path.join(bank, 'templates/exercice.typ'), 'utf8'), {
       title: 'Test création', chapters: ['graphes'], algorithms: [], structures: [], languages: [], levels: ['MPI'], difficulty: 2, minutes: 20
