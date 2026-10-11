@@ -1,6 +1,6 @@
 # Enseignement Typst
 
-Extension VS Code pour [enseignement](https://github.com/mpi-informatique/enseignement) et `enseignement-prive` : rechercher des exercices, composer des documents, afficher les énoncés et les corrigés, exporter leurs PDF.
+Extension VS Code pour [exercices](https://github.com/mpi-informatique/exercices) et `exercices-prive` : rechercher des exercices, composer des documents, afficher les énoncés et les corrigés, exporter leurs PDF.
 
 ## Installation
 
@@ -8,7 +8,7 @@ Après sa première publication, installer [Enseignement Typst depuis le Marketp
 
 Pour une installation manuelle, utiliser le VSIX des [versions GitHub](https://github.com/mpi-informatique/vscode-enseignement/releases) ou de `releases/` avec **Extensions → … → Installer à partir d'un VSIX**. Une installation en VSIX désactive par défaut la mise à jour automatique : la réactiver après disponibilité sur le Marketplace.
 
-Ouvrir ensuite le dépôt public ou privé, ou leur dossier parent : les dépôts enfants immédiats sont détectés automatiquement. Pour les consulter ensemble, ouvrir `enseignement-prive/enseignement.code-workspace`.
+Ouvrir ensuite le dépôt public ou privé, ou leur dossier parent : les dépôts enfants immédiats sont détectés automatiquement. Pour les consulter ensemble, ouvrir `exercices-prive/enseignement.code-workspace`.
 
 L'identifiant est `qfortier.vscode-enseignement`, les réglages utilisent `mpiEnseignement.*`. Désactiver l'ancienne extension Exercices Typst dans cet espace de travail pour éviter les raccourcis en double. Les réglages personnalisés de `mpiExercices.*` peuvent être reportés vers le nouveau préfixe : `makePath` devient `pythonPath`.
 
@@ -66,7 +66,7 @@ Sans Tinymist, un lecteur PDF se recharge à l'enregistrement, sans synchronisat
 
 ## Développement
 
-Cloner aussi `mpi-informatique/enseignement` dans le dossier voisin `../enseignement`. Le package local `../enseignement/shared` fournit les types, la validation du catalogue, les filtres et les noms de PDF communs avec le site web. Il est intégré au JavaScript du VSIX à la compilation ; les utilisateurs de l'extension n'ont rien à installer en plus. Les workflows CI fixent la révision publique utilisée pour construire l'extension.
+Cloner aussi `mpi-informatique/exercices` dans le dossier voisin `../exercices`. Le package local `../exercices/shared` fournit les types, la validation du catalogue, les filtres et les noms de PDF communs avec le site web. Il est intégré au JavaScript du VSIX à la compilation ; les utilisateurs de l'extension n'ont rien à installer en plus. Les workflows CI fixent la révision publique utilisée pour construire l'extension.
 
 ```sh
 nix develop path:.
@@ -80,7 +80,7 @@ npm run package
 
 Les tests unitaires couvrent la découverte, les métadonnées, les chemins, la composition et les commandes Python/Nix. Les tests d'intégration ouvrent un profil VS Code isolé, utilisent des documents et des copies fictifs, et ne lisent pas les données d'élèves.
 
-Pour une seule suite : `npm run test:integration -- --suite=edition`. Suites : `decouverte`, `edition`, `apercu`, `corrections`, `documents`. Les suites publiques utilisent le clone voisin `../enseignement`. La suite `corrections` nécessite les outils de `../enseignement-prive`, sans en copier les corrections. Les aperçus natifs nécessitent Tinymist installé.
+Pour une seule suite : `npm run test:integration -- --suite=edition`. Suites : `decouverte`, `edition`, `apercu`, `corrections`, `documents`. Les suites publiques utilisent le clone voisin `../exercices`. La suite `corrections` nécessite les outils de `../exercices-prive`, sans en copier les corrections. Les aperçus natifs nécessitent Tinymist installé.
 
 Variables de test : `MPI_ENSEIGNEMENT_ROOT` pour le dépôt ouvert, `MPI_PUBLIC_ROOT` pour les outils publics, `MPI_PRIVATE_ROOT` pour les outils privés, `VSCODE_EXECUTABLE` et `TINYMIST_PATH` pour choisir les installations. Consulter [l'organisation du code](scripts/README.md) pour comprendre les différents modules.
 

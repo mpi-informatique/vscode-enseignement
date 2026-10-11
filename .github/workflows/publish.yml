@@ -33,9 +33,9 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          repository: mpi-informatique/enseignement
+          repository: mpi-informatique/exercices
           ref: 47a63d95f5ba916c88fbf495d7e7b957f611ca18
-          path: enseignement
+          path: exercices
           persist-credentials: false
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
       - name: Vérifier la version et son appartenance à main

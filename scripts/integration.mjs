@@ -8,7 +8,7 @@ const supported = ['decouverte', 'edition', 'apercu', 'corrections', 'documents'
 const suite = process.argv.find(arg => arg.startsWith('--suite='))?.slice('--suite='.length)
   ?? (process.env.MPI_PRIVATE_TEST ? 'corrections' : '');
 if (suite && !supported.includes(suite)) throw new Error(`Suite inconnue : ${suite}. Choisir ${supported.join(', ')}.`);
-const bank = process.env.MPI_ENSEIGNEMENT_ROOT ?? path.resolve(root, '../enseignement');
+const bank = process.env.MPI_ENSEIGNEMENT_ROOT ?? path.resolve(root, '../exercices');
 // VS Code doit démarrer comme application, même depuis un terminal hébergé par Electron.
 delete process.env.ELECTRON_RUN_AS_NODE;
 await mkdir(path.join(root, '.vscode-test'), { recursive: true });
@@ -29,8 +29,8 @@ try {
     launchArgs: [workspace, '--new-window', '--disable-extensions', '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', '--user-data-dir', userData],
     extensionTestsEnv: {
       MPI_ENSEIGNEMENT_ROOT: bank,
-      MPI_PUBLIC_ROOT: process.env.MPI_PUBLIC_ROOT ?? path.resolve(root, '../enseignement'),
-      MPI_PRIVATE_ROOT: process.env.MPI_PRIVATE_ROOT ?? path.resolve(root, '../enseignement-prive'),
+      MPI_PUBLIC_ROOT: process.env.MPI_PUBLIC_ROOT ?? path.resolve(root, '../exercices'),
+      MPI_PRIVATE_ROOT: process.env.MPI_PRIVATE_ROOT ?? path.resolve(root, '../exercices-prive'),
       MPI_INTEGRATION_SUITE: suite,
       PREVIEW_REVIEW: process.env.PREVIEW_REVIEW ?? ''
     }

@@ -147,7 +147,7 @@ export async function activate(context: vscode.ExtensionContext) {
     update();
     sheetEditor.remember();
     sheetEditor.changed.fire();
-    if (!banks.length) view.message = 'Ouvrir enseignement, enseignement-prive ou un dépôt avec scripts/build.py et des modèles Typst.';
+    if (!banks.length) view.message = 'Ouvrir exercices, exercices-prive ou un dépôt avec scripts/build.py et des modèles Typst.';
   }
   const discoverQueued = () => { discovery = discovery.catch(() => undefined).then(discover); return discovery; };
   async function checkSource(source: Source): Promise<Source> {
