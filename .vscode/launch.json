@@ -1,7 +1,7 @@
 {
   "version": "0.2.0",
   "configurations": [{
-    "name": "Tester Enseignement Typst", "type": "extensionHost", "request": "launch",
+    "name": "Tester Exercices MPI", "type": "extensionHost", "request": "launch",
     "args": ["--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/../exercices"],
     "outFiles": ["${workspaceFolder}/dist/**/*.js"], "preLaunchTask": "npm: build"
   }]

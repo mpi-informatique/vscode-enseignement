@@ -11,7 +11,7 @@ export async function fixture() {
   const temporary = await realpath(await mkdtemp(path.join(tmpdir(), 'enseignement-test-')));
   const previewBank = { root: temporary, name: 'Test isolé', scope: vscode.Uri.file(temporary) };
   try {
-    for (const file of ['lib', 'templates', 'scripts', 'justfile', 'nix', 'flake.nix', 'flake.lock', 'typst.toml', 'enseignement.typ']) await cp(path.join(bank, file), path.join(temporary, file), { recursive: true });
+    for (const file of ['lib', 'templates', 'scripts', 'justfile', 'nix', 'flake.nix', 'flake.lock', 'typst.toml', 'load.typ']) await cp(path.join(bank, file), path.join(temporary, file), { recursive: true });
     for (const directory of ['exercices/banque/graphes', 'exercices/feuilles', 'exercices/devoirs/2026-2027', 'exercices/concours']) await mkdir(path.join(temporary, directory), { recursive: true });
     const customTemplate = (await readFile(path.join(temporary, 'templates/devoir.typ'), 'utf8')).replace('type: "devoir"', 'type: "colle"');
     await writeFile(path.join(temporary, 'templates/colle.typ'), customTemplate);

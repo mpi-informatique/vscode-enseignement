@@ -1,16 +1,16 @@
-# Enseignement Typst
+# Exercices MPI
 
 Extension VS Code pour [exercices](https://github.com/mpi-informatique/exercices) et `exercices-prive` : rechercher des exercices, composer des documents, afficher les énoncés et les corrigés, exporter leurs PDF.
 
 ## Installation
 
-Après sa première publication, installer [Enseignement Typst depuis le Marketplace](https://marketplace.visualstudio.com/items?itemName=qfortier.vscode-enseignement) et activer **Auto Update** dans le menu de l'extension. Les nouvelles versions seront récupérées automatiquement.
+Après sa première publication, installer [Exercices MPI depuis le Marketplace](https://marketplace.visualstudio.com/items?itemName=qfortier.vscode-mpi-exercices) et activer **Auto Update** dans le menu de l'extension. Les nouvelles versions seront récupérées automatiquement.
 
-Pour une installation manuelle, utiliser le VSIX des [versions GitHub](https://github.com/mpi-informatique/vscode-enseignement/releases) ou de `releases/` avec **Extensions → … → Installer à partir d'un VSIX**. Une installation en VSIX désactive par défaut la mise à jour automatique : la réactiver après disponibilité sur le Marketplace.
+Pour une installation manuelle, utiliser le VSIX des [versions GitHub](https://github.com/mpi-informatique/vscode-mpi-exercices/releases) ou de `releases/` avec **Extensions → … → Installer à partir d'un VSIX**. Une installation en VSIX désactive par défaut la mise à jour automatique : la réactiver après disponibilité sur le Marketplace.
 
 Ouvrir ensuite le dépôt public ou privé, ou leur dossier parent : les dépôts enfants immédiats sont détectés automatiquement. Pour les consulter ensemble, ouvrir `exercices-prive/enseignement.code-workspace`.
 
-L'identifiant est `qfortier.vscode-enseignement`, les réglages utilisent `mpiEnseignement.*`. Désactiver l'ancienne extension Exercices Typst dans cet espace de travail pour éviter les raccourcis en double. Les réglages personnalisés de `mpiExercices.*` peuvent être reportés vers le nouveau préfixe : `makePath` devient `pythonPath`.
+L'identifiant est `qfortier.vscode-mpi-exercices`, les réglages utilisent `mpiEnseignement.*`. Désactiver l'ancienne extension Exercices Typst dans cet espace de travail pour éviter les raccourcis en double. Les réglages personnalisés de `mpiExercices.*` peuvent être reportés vers le nouveau préfixe : `makePath` devient `pythonPath`.
 
 Prérequis : VS Code ≥ 1.100 et Nix avec `nix-command` et `flakes`. Tinymist est recommandé pour l'aperçu à la frappe. Sans Nix, choisir le mode `direct` et fournir Python ≥ 3.11, Typst, les dépendances Typst et, pour le privé, `ENSEIGNEMENT_SOURCE`.
 

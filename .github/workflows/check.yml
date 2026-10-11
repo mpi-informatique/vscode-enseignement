@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: vscode-enseignement
+        working-directory: vscode-mpi-exercices
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          path: vscode-enseignement
+          path: vscode-mpi-exercices
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: mpi-informatique/exercices
-          ref: 47a63d95f5ba916c88fbf495d7e7b957f611ca18
+          ref: a84fa3e0295d6e5feabb9422271be1061c85cf09
           path: exercices
           persist-credentials: false
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1

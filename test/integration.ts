@@ -7,7 +7,7 @@ import * as preview from './integration/preview';
 import * as documents from './integration/documents';
 
 export async function run(): Promise<void> {
-  const extension = vscode.extensions.getExtension('qfortier.vscode-enseignement');
+  const extension = vscode.extensions.getExtension('qfortier.vscode-mpi-exercices');
   assert.ok(extension, 'Extension chargée');
   const api = await extension.activate();
   const suites = { decouverte: discovery, corrections: copies, edition, apercu: preview, documents };

@@ -1,6 +1,6 @@
 {
-  "name": "vscode-enseignement",
-  "displayName": "Enseignement Typst",
+  "name": "vscode-mpi-exercices",
+  "displayName": "Exercices MPI",
   "icon": "media/mpi.png",
   "description": "Rechercher, composer et compiler les ressources Typst de mpi-informatique/exercices et exercices-prive.",
   "version": "0.1.0",
@@ -35,119 +35,119 @@
       {
         "command": "mpiEnseignement.addCurrent",
         "title": "Ajouter au document en cours",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(add)"
       },
       {
         "command": "mpiEnseignement.memberUp",
         "title": "Monter dans le document",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(arrow-up)"
       },
       {
         "command": "mpiEnseignement.memberDown",
         "title": "Descendre dans le document",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(arrow-down)"
       },
       {
         "command": "mpiEnseignement.memberRemove",
         "title": "Retirer du document",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(close)"
       },
       {
         "command": "mpiEnseignement.deleteSource",
         "title": "Supprimer le fichier…",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(trash)"
       },
       {
         "command": "mpiEnseignement.newFolderLibrary",
         "title": "Ajouter un dossier",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(new-folder)"
       },
       {
         "command": "mpiEnseignement.newFolderSheets",
         "title": "Ajouter un dossier",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(new-folder)"
       },
       {
         "command": "mpiEnseignement.searchSheets",
         "title": "Rechercher des documents",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(search)"
       },
       {
         "command": "mpiEnseignement.filtersSheets",
         "title": "Filtrer les documents",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(filter)"
       },
       {
         "command": "mpiEnseignement.resetSheets",
         "title": "Annuler la recherche et les filtres",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(close)"
       },
       {
         "command": "mpiEnseignement.newExercise",
         "title": "Ajouter un exercice",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(new-file)"
       },
       {
         "command": "mpiEnseignement.newSheet",
         "title": "Créer un document",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(file-add)"
       },
       {
         "command": "mpiEnseignement.toggleLibrary",
         "title": "Basculer dossiers / liste",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.toggleSheets",
         "title": "Basculer dossiers / liste des documents",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.search",
         "title": "Rechercher des exercices",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(search)"
       },
       {
         "command": "mpiEnseignement.filters",
         "title": "Filtrer les exercices",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(filter)"
       },
       {
         "command": "mpiEnseignement.reset",
         "title": "Annuler la recherche et les filtres",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(close)"
       },
       {
         "command": "mpiEnseignement.refresh",
         "title": "Régénérer le catalogue",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(refresh)"
       },
       {
         "command": "mpiEnseignement.source",
         "title": "Afficher le fichier",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(go-to-file)"
       },
       {
         "command": "mpiEnseignement.enonce",
         "title": "Compiler et afficher l'énoncé",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": {
           "light": "media/preview-light.svg",
           "dark": "media/preview-dark.svg"
@@ -156,7 +156,7 @@
       {
         "command": "mpiEnseignement.corrige",
         "title": "Compiler et afficher le corrigé",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": {
           "light": "media/preview-corrected.svg",
           "dark": "media/preview-corrected.svg"
@@ -165,55 +165,55 @@
       {
         "command": "mpiEnseignement.compileBoth",
         "title": "Compiler l'énoncé et le corrigé",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.sync",
         "title": "Rejoindre le curseur dans l'aperçu",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.output",
         "title": "Afficher le journal de compilation",
-        "category": "Enseignement Typst",
+        "category": "Exercices MPI",
         "icon": "$(output)"
       },
       {
         "command": "mpiEnseignement.openPanel",
-        "title": "Ouvrir le panneau Enseignement Typst",
-        "category": "Enseignement Typst"
+        "title": "Ouvrir le panneau Exercices MPI",
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.collapsecurrent",
         "title": "Tout replier",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.collapselibrary",
         "title": "Tout replier",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.collapsesheets",
         "title": "Tout replier",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.downloadCorrige",
         "title": "Télécharger le corrigé (PDF)",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       },
       {
         "command": "mpiEnseignement.downloadEnonce",
         "title": "Télécharger l'énoncé (PDF)",
-        "category": "Enseignement Typst"
+        "category": "Exercices MPI"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
           "id": "mpiEnseignement",
-          "title": "Enseignement Typst",
+          "title": "Exercices MPI",
           "icon": "media/library.svg"
         }
       ]
@@ -241,7 +241,7 @@
       },
       {
         "view": "mpiEnseignement.library",
-        "contents": "Ouvrir enseignement ou enseignement-prive.\n[Régénérer le catalogue](command:mpiEnseignement.refresh)"
+        "contents": "Ouvrir exercices ou exercices-prive.\n[Régénérer le catalogue](command:mpiEnseignement.refresh)"
       }
     ],
     "menus": {
@@ -511,7 +511,7 @@
       ]
     },
     "configuration": {
-      "title": "Enseignement Typst",
+      "title": "Exercices MPI",
       "properties": {
         "mpiEnseignement.previewTheme": {
           "type": "string",
@@ -642,10 +642,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mpi-informatique/vscode-enseignement.git"
+    "url": "https://github.com/mpi-informatique/vscode-mpi-exercices.git"
   },
   "bugs": {
-    "url": "https://github.com/mpi-informatique/vscode-enseignement/issues"
+    "url": "https://github.com/mpi-informatique/vscode-mpi-exercices/issues"
   },
-  "homepage": "https://github.com/mpi-informatique/vscode-enseignement#readme"
+  "homepage": "https://github.com/mpi-informatique/vscode-mpi-exercices#readme"
 }

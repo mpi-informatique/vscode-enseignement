@@ -33,7 +33,7 @@ export async function start(bank: Bank, source: string, variant: Variant, option
   const settings = { rootPath: bank.root, typstExtraArgs: args.slice(0, -1), exportPdf: 'never',
     preview: { refresh: 'onType', invertColors: JSON.stringify({ rest: dark ? 'always' : 'never', image: 'never' }) }, customizedShowDocument: true };
   const env = await environment(bank);
-  const output = vscode.window.createOutputChannel(`Enseignement Typst — ${path.basename(source)} (${variant})`);
+  const output = vscode.window.createOutputChannel(`Exercices MPI — ${path.basename(source)} (${variant})`);
   const child = spawn(binary, ['lsp'], { cwd: bank.root, stdio: 'pipe', windowsHide: true, env });
   const connection = createMessageConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
   const subscriptions: vscode.Disposable[] = [];

@@ -15,7 +15,7 @@ export async function run(api: any, _extension?: unknown): Promise<void> {
   try {
     for (const directory of ['lib', 'templates', 'scripts', 'chapitres/automates'])
       await mkdir(path.join(temporary, directory), { recursive: true });
-    for (const filename of ['flake.nix', 'flake.lock', 'nix', 'scripts/package.py', 'typst.toml', 'enseignement.typ'])
+    for (const filename of ['flake.nix', 'flake.lock', 'nix', 'scripts/package.py', 'typst.toml', 'load.typ'])
       await cp(path.join(process.env.MPI_PUBLIC_ROOT!, filename), path.join(temporary, filename), { recursive: true });
     await writeFile(path.join(temporary, 'lib/cours.typ'), `#let cours(type: "poly", titre: "Cours", body) = {
   if type == "presentation" { set page(width: 160mm, height: 90mm) }

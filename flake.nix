@@ -1,5 +1,5 @@
 {
-  description = "Développement de mpi-informatique/vscode-enseignement";
+  description = "Développement de mpi-informatique/vscode-mpi-exercices";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 

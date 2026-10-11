@@ -49,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const report = (error: unknown) => {
     if (disposed || error instanceof vscode.CancellationError) return;
     runner.output.appendLine(String(error));
-    if (!errorStatus.has(error)) errorStatus.set('extension', 'Erreur Enseignement Typst', error);
+    if (!errorStatus.has(error)) errorStatus.set('extension', 'Erreur Exercices MPI', error);
   };
   const update = () => {
     for (const [index, browser] of browsers.entries()) {

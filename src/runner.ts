@@ -12,7 +12,7 @@ export class Runner implements vscode.Disposable {
   private children = new Set<ChildProcess>();
   private disposed = false;
   private errorKeys = new Set<string>();
-  readonly output = vscode.window.createOutputChannel('Enseignement Typst');
+  readonly output = vscode.window.createOutputChannel('Exercices MPI');
   readonly diagnostics = vscode.languages.createDiagnosticCollection('enseignement');
 
   run(bank: Bank, targets: string[]): Promise<void> {
@@ -33,7 +33,7 @@ export class Runner implements vscode.Disposable {
     if (!vscode.workspace.isTrusted) throw new Error('Autorisez ce dossier dans VS Code pour compiler.');
     const { command, args } = buildCommand(bank, targets);
     this.output.appendLine(`\n[${bank.name}] ${command} ${args.join(' ')}`);
-    await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: `Enseignement Typst : ${targets[0] === 'catalogue' ? 'catalogue' : 'compilation'}`, cancellable: true }, async (_progress, token) => {
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: `Exercices MPI : ${targets[0] === 'catalogue' ? 'catalogue' : 'compilation'}`, cancellable: true }, async (_progress, token) => {
       await new Promise<void>((resolve, reject) => {
         const child = spawn(command, args, { cwd: bank.root, shell: false, detached: process.platform !== 'win32', env: { ...process.env, NO_COLOR: '1' } });
         this.children.add(child);
@@ -45,7 +45,7 @@ export class Runner implements vscode.Disposable {
         const cancellation = token.onCancellationRequested(() => this.stop(child));
         child.once('error', error => {
           this.children.delete(child); cancellation.dispose();
-          reject(new Error(`Impossible de lancer ${command} : ${error.message}. Vérifiez les réglages Enseignement Typst.`));
+          reject(new Error(`Impossible de lancer ${command} : ${error.message}. Vérifiez les réglages Exercices MPI.`));
         });
         child.once('close', code => {
           this.children.delete(child); cancellation.dispose();
