@@ -629,7 +629,8 @@
   },
   "dependencies": {
     "pdfjs-dist": "6.3.289",
-    "vscode-jsonrpc": "8.2.0"
+    "vscode-jsonrpc": "8.2.0",
+    "@mpi-informatique/enseignement-core": "file:../enseignement/shared"
   },
   "devDependencies": {
     "@types/node": "22.20.4",

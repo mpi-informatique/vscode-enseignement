@@ -66,6 +66,8 @@ Sans Tinymist, un lecteur PDF se recharge à l'enregistrement, sans synchronisat
 
 ## Développement
 
+Cloner aussi `mpi-informatique/enseignement` dans le dossier voisin `../enseignement`. Le package local `../enseignement/shared` fournit les types, la validation du catalogue, les filtres et les noms de PDF communs avec le site web. Il est intégré au JavaScript du VSIX à la compilation ; les utilisateurs de l'extension n'ont rien à installer en plus. Les workflows CI fixent la révision publique utilisée pour construire l'extension.
+
 ```sh
 nix develop path:.
 npm ci

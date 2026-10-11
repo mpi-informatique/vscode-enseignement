@@ -1,9 +1,8 @@
 import { mask } from './typst';
 
-export const typeLabels: Record<string, string> = { td: 'TD', devoir: 'Devoir', concours: 'Concours', copie: 'Copie', cours: 'Cours', tp: 'TP', algorithme: 'Algorithme', poly: 'Polycopié', presentation: 'Présentation' };
-export const typeLabel = (type: string): string => typeLabels[type] ?? type;
-export const sourceExclusions = '**/{build,lib,templates,ressources,docs,scripts,tmp,node_modules,.*}/**';
-export const technicalFolders = new Set(['build', 'lib', 'templates', 'ressources', 'docs', 'scripts', 'tmp', 'node_modules']);
+export { typeLabels, typeLabel } from '@mpi-informatique/enseignement-core';
+export const sourceExclusions = '**/{build,lib,templates,ressources,docs,scripts,tmp,node_modules,web,shared,.*}/**';
+export const technicalFolders = new Set(['build', 'lib', 'templates', 'ressources', 'docs', 'scripts', 'tmp', 'node_modules', 'web', 'shared']);
 export interface SourceKind { kind: 'exercice' | 'document'; type?: string; direct: boolean }
 
 // Literal type declarations are indexable without compiling every file while typing.
