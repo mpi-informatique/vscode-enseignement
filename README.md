@@ -22,7 +22,7 @@ Prérequis : VS Code ≥ 1.100 et Nix avec `nix-command` et `flakes`. Tinymist e
 
 Les contenus sont reconnus d'après leur code, indépendamment du dossier : export `ex` pour un exercice, `feuille.with(type: "…", ...)` pour un document. Les fonctions de mise en page personnalisées déclarant un `type` sont aussi reconnues. Les dossiers techniques et `build/` sont exclus.
 
-La structure habituelle est `exercices/banque/`, `exercices/concours/`, `exercices/devoirs/` et `exercices/feuilles/`. Les futures familles `cours/`, `tp/` et `algorithmes/` peuvent utiliser les mêmes vues. Le privé ajoute `corrections/<annee>/ds/<devoir>/copies/`.
+Les exercices autonomes sont dans `chapitres/<chapitre>/exercices/`, les feuilles, cours et présentations dans `chapitres/<chapitre>/`, et les sujets de concours dans `devoirs/concours/`. Le privé ajoute `corrections/<annee>/ds/<devoir>/copies/`.
 
 La recherche ouvre un fichier sans filtrer le panneau. Elle ignore les accents et la casse, et place en premier les fichiers ouverts puis les fichiers récemment consultés. Les filtres du panneau restent appliqués. Le catalogue public est régénéré automatiquement si les sources Typst ont changé sur disque, avec un regroupement des changements toutes les cinq secondes. Une erreur conserve le dernier catalogue valide.
 
