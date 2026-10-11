@@ -18,7 +18,7 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
   const previews = new Previews({ extensionUri: extension.extensionUri } as vscode.ExtensionContext, async () => undefined);
   try {
     const root = process.env.MPI_PRIVATE_ROOT!;
-    for (const file of ['lib', 'templates', 'scripts', 'justfile', 'flake.nix', 'flake.lock'])
+    for (const file of ['lib', 'templates', 'scripts', 'justfile', 'flake.nix', 'flake.lock', 'load.typ'])
       await cp(path.join(root, file), path.join(temporary, file), { recursive: true });
     const source = 'corrections/2026/ds/test/copies/exemple.typ';
     await mkdir(path.dirname(path.join(temporary, source)), { recursive: true });
@@ -32,13 +32,13 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
     const library = await libraryRoot(project);
     assert.ok(library.startsWith('/nix/store/'), 'Vocabulaire issu de la bibliothèque verrouillée');
     assert.ok((await readFile(path.join(library, 'lib/meta.typ'), 'utf8')).includes('chapitres-programme'));
-    const exercise = 'exercices/banque/test-prive.typ';
+    const exercise = 'chapitres/graphes/exercices/test-prive.typ';
     await mkdir(path.dirname(path.join(temporary, exercise)), { recursive: true });
     await writeFile(path.join(temporary, exercise), exerciseFromTemplate(await readFile(path.join(temporary, 'templates/exercice.typ'), 'utf8'), {
       title: 'Exercice fictif privé', chapters: ['graphes'], algorithms: [], structures: [], languages: [], levels: ['MPI'], difficulty: 2, minutes: 20
     }));
     await runner.run(project, ['c', exercise]);
-    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/exercices/banque/test-prive', variant + '.pdf'))).size > 0);
+    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/chapitres/graphes/exercices/test-prive', variant + '.pdf'))).size > 0);
     vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders!.length, 0,
       { uri: project.scope, name: project.name });
     await until(async () => {

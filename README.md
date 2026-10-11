@@ -10,7 +10,7 @@ Pour une installation manuelle, utiliser le VSIX des [versions GitHub](https://g
 
 Ouvrir ensuite le dépôt public ou privé, ou leur dossier parent : les dépôts enfants immédiats sont détectés automatiquement. Pour les consulter ensemble, ouvrir `exercices-prive/enseignement.code-workspace`.
 
-L'identifiant est `qfortier.vscode-mpi-exercices`, les réglages utilisent `mpiEnseignement.*`. Désactiver l'ancienne extension Exercices Typst dans cet espace de travail pour éviter les raccourcis en double. Les réglages personnalisés de `mpiExercices.*` peuvent être reportés vers le nouveau préfixe : `makePath` devient `pythonPath`.
+L'identifiant est `qfortier.vscode-mpi-exercices`, les réglages utilisent `mpiEnseignement.*`. Désactiver l'ancienne extension Enseignement Typst (`qfortier.vscode-enseignement`) dans cet espace de travail pour éviter les raccourcis en double. Les réglages personnalisés de `mpiExercices.*` peuvent être reportés vers le nouveau préfixe : `makePath` devient `pythonPath`.
 
 Prérequis : VS Code ≥ 1.100 et Nix avec `nix-command` et `flakes`. Tinymist est recommandé pour l'aperçu à la frappe. Sans Nix, choisir le mode `direct` et fournir Python ≥ 3.11, Typst, les dépendances Typst et, pour le privé, `ENSEIGNEMENT_SOURCE`.
 
