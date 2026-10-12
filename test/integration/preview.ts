@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
-import { stat, rm } from 'node:fs/promises';
+import { stat, rm, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { Previews } from '../../src/preview';
 import { Runner } from '../../src/runner';
 import { errorStatus } from '../../src/errors';
 import { forward } from '../../src/tinymist';
 import { fixture, until } from './helpers';
-export async function run(_api: any, extension: vscode.Extension<any>): Promise<void> {
+export async function run(api: any, extension: vscode.Extension<any>): Promise<void> {
   const { temporary, previewBank, relative, generated, file } = await fixture();
   const previews = new Previews({ extensionUri: extension.extensionUri } as vscode.ExtensionContext, async () => undefined);
   const runner = new Runner();
@@ -128,10 +128,66 @@ export async function run(_api: any, extension: vscode.Extension<any>): Promise<
     if (process.env.PREVIEW_REVIEW) { console.log('Aperçu temporaire', enonce.url); await new Promise(resolve => setTimeout(resolve, 55_000)); }
     preview.panel.dispose();
     assert.equal(previews.entries.size, 0);
+    const courseSource = 'support.typ';
+    const courseUri = vscode.Uri.file(path.join(temporary, courseSource));
+    await writeFile(courseUri.fsPath, `#import "/load.typ": cours-et-presentation, cours-seulement, presentation-seulement
+#show: cours-et-presentation.with(titre: "Support fictif")
+= Partie commune
+== Contenu commun
+Un contenu partagé entre les deux formats.
+#cours-seulement[== Repère du cours
+Une explication réservée au cours.]
+#presentation-seulement[== Repère de la présentation
+Une indication réservée à la présentation.]
+`);
+    const courseEditor = await vscode.window.showTextDocument(courseUri, { viewColumn: vscode.ViewColumn.One });
+    const coursePreview = await previews.open(previewBank, courseSource, 'enonce');
+    assert.equal(coursePreview.documentType, 'cours-presentation');
+    assert.match(coursePreview.panel.webview.html, />Cours<\/button>/);
+    assert.match(coursePreview.panel.webview.html, />Présentation<\/button>/);
+    const courseSession = coursePreview.sessions.get('enonce');
+    for (const [variant, marker, excluded, format] of [
+      ['enonce', 'Repère du cours', 'Repère de la présentation', 'cours'],
+      ['corrige', 'Repère de la présentation', 'Repère du cours', 'presentation']
+    ] as const) {
+      await coursePreview.select(variant);
+      assert.equal(coursePreview.panel.title, `support-${format}.pdf`);
+      let renderedOutline: unknown;
+      coursePreview.sessions.get(variant)!.connection.onNotification('tinymist/documentOutline', outline => { renderedOutline = outline; });
+      const edit = new vscode.WorkspaceEdit();
+      edit.insert(courseUri, courseEditor.document.positionAt(courseEditor.document.getText().length), '\n');
+      await vscode.workspace.applyEdit(edit);
+      await until(() => JSON.stringify(renderedOutline)?.includes(marker) ?? false, `${format} : contenu propre au format affiché`);
+      assert.ok(!JSON.stringify(renderedOutline).includes(excluded), `${format} : contenu de l'autre format absent`);
+    }
+    await coursePreview.select('enonce');
+    assert.equal(coursePreview.sessions.get('enonce'), courseSession, 'La bascule cours/présentation réutilise la session');
+    await courseEditor.document.save();
+    coursePreview.panel.dispose();
+    const courseFallback = new Previews({ extensionUri: extension.extensionUri } as vscode.ExtensionContext, async () => undefined, () => false);
+    try {
+      const pdf = await courseFallback.open(previewBank, courseSource, 'enonce');
+      assert.equal(pdf.panel.title, 'support-cours.pdf');
+      await pdf.select('corrige');
+      assert.equal(pdf.panel.title, 'support-presentation.pdf');
+      for (const format of ['cours', 'presentation']) assert.ok((await stat(path.join(temporary, 'build/support', `${format}.pdf`))).size > 1000);
+    } finally { courseFallback.dispose(); }
+    vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders!.length, 0, { uri: previewBank.scope, name: previewBank.name });
+    await until(async () => {
+      try { return (await api.revealSheet(courseSource)).bank.root === temporary; }
+      catch { return false; }
+    }, 'Le support cours/présentation est découvert');
+    for (const [command, format] of [['enonce', 'cours'], ['corrige', 'presentation']]) {
+      await vscode.commands.executeCommand(`mpiEnseignement.${command}`, courseUri);
+      assert.equal(api.previewCount(), 1, 'Les commandes F5/F6 réutilisent le même panneau');
+      assert.ok(vscode.window.tabGroups.all.some(group => group.tabs.some(tab => tab.label === `support-${format}.pdf`)), `La commande ${command} affiche ${format}`);
+    }
   } finally {
     for (const socket of sockets) socket.close();
     previews.dispose(); runner.dispose();
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    const index = vscode.workspace.workspaceFolders?.findIndex(folder => folder.uri.fsPath === temporary) ?? -1;
+    if (index >= 0) vscode.workspace.updateWorkspaceFolders(index, 1);
     await rm(temporary, { recursive: true, force: true });
   }
   console.log('Aperçus et synchronisation vérifiés sur des documents fictifs.');

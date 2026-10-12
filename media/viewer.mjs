@@ -58,7 +58,7 @@ window.addEventListener('message', ({ data }) => {
   for (const [variant, url] of Object.entries(data.sessions)) {
     if (!frames.has(variant)) {
       const frame = document.createElement('iframe');
-      frame.title = variant === 'enonce' ? 'Énoncé — Tinymist' : 'Corrigé — Tinymist';
+      frame.title = `${data.labels[variant]} — Tinymist`;
       frame.src = url;
       frame.dataset.variant = variant;
       frame.addEventListener('load', () => { controls(frame); vscode.postMessage({ type: 'frameReady', variant }); });

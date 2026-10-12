@@ -1,16 +1,30 @@
 export * from '@mpi-informatique/enseignement-core';
-import { pdfFilename, safeSource, type Variant } from '@mpi-informatique/enseignement-core';
+import { pdfFilename as exercisePdfFilename, safeSource, sourceId, type Variant } from '@mpi-informatique/enseignement-core';
 
-export function pdfTarget(source: string, variant: Variant, copy = false): string {
+export function outputVariant(variant: Variant, documentType?: string): string {
+  return documentType === 'cours-presentation' ? (variant === 'enonce' ? 'cours' : 'presentation') : variant;
+}
+
+export function variantLabels(documentType?: string): Record<Variant, string> {
+  return documentType === 'cours-presentation' ? { enonce: 'Cours', corrige: 'Présentation' } : { enonce: 'Énoncé', corrige: 'Corrigé' };
+}
+
+export function pdfFilename(source: string, variant: Variant, documentType?: string): string {
+  safeSource(source);
+  return documentType === 'cours-presentation' ? `${sourceId(source)}-${outputVariant(variant, documentType)}.pdf` : exercisePdfFilename(source, variant);
+}
+
+export function pdfTarget(source: string, variant: Variant, copy = false, documentType?: string): string {
   safeSource(source);
   const stem = source.slice(0, -4);
-  const filename = copy && variant === 'corrige' ? pdfFilename(source, variant) : `${variant}.pdf`;
+  const filename = copy && variant === 'corrige' ? pdfFilename(source, variant) : `${outputVariant(variant, documentType)}.pdf`;
   return `build/${stem}/${filename}`;
 }
 
-export function previewArguments(root: string, source: string, variant: Variant, direct = false): string[] {
+export function previewArguments(root: string, source: string, variant: Variant, direct = false, documentType?: string): string[] {
   safeSource(source);
-  const args = ['--root', root, '--ignore-system-fonts', '--input', `corrige=${variant === 'corrige'}`];
+  const input = documentType === 'cours-presentation' ? `format=${outputVariant(variant, documentType)}` : `corrige=${variant === 'corrige'}`;
+  const args = ['--root', root, '--ignore-system-fonts', '--input', input];
   if (!direct) args.push('--input', `exercice=/${source}`);
   args.push(`${root}/${direct ? source : 'templates/fiche.typ'}`);
   return args;

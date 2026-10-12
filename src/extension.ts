@@ -183,9 +183,9 @@ export async function activate(context: vscode.ExtensionContext) {
     await runner.run(source.bank, targets);
   }
   async function exportPdf(preview: Source, variant: 'enonce' | 'corrige'): Promise<void> {
-    const destination = await vscode.window.showSaveDialog({ defaultUri: vscode.Uri.file(path.join(preview.bank.root, pdfFilename(preview.source, variant))), filters: { PDF: ['pdf'] } });
+    const destination = await vscode.window.showSaveDialog({ defaultUri: vscode.Uri.file(path.join(preview.bank.root, pdfFilename(preview.source, variant, preview.documentType))), filters: { PDF: ['pdf'] } });
     if (!destination) return;
-    const target = pdfTarget(preview.source, variant, preview.documentType === 'copie');
+    const target = pdfTarget(preview.source, variant, preview.documentType === 'copie', preview.documentType);
     await compile(preview);
     const from = vscode.Uri.file(path.join(preview.bank.root, target));
     if (from.toString() !== destination.toString()) await vscode.workspace.fs.copy(from, destination, { overwrite: true });

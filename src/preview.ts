@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { Variant, pdfTarget, pdfFilename } from './core';
+import { Variant, pdfTarget, pdfFilename, variantLabels } from './core';
 import { Bank, Runner } from './runner';
 import * as tinymist from './tinymist';
 import { errorStatus } from './errors';
@@ -11,6 +11,7 @@ import { identify } from './documents';
 
 export interface Preview {
   bank: Bank; source: string; variant: Variant; panel: vscode.WebviewPanel;
+  documentType?: string;
   sessions: Map<Variant, tinymist.Session>;
   jumps: boolean;
   native: boolean;
@@ -69,7 +70,10 @@ export class Previews implements vscode.Disposable {
     const key = `${bank.root}/${source}`;
     const existing = this.entries.get(key);
     if (existing) { existing.panel.reveal(undefined, true); await existing.select(variant); return existing; }
-    const panel = vscode.window.createWebviewPanel('mpiEnseignement.pdf', pdfFilename(source, variant), { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
+    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(bank.root, source)));
+    const documentType = identify(document.getText(), source)?.type;
+    const labels = variantLabels(documentType);
+    const panel = vscode.window.createWebviewPanel('mpiEnseignement.pdf', pdfFilename(source, variant, documentType), { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
       enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media'), vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'pdfjs')]
     });
     panel.iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'media', 'pdf.svg');
@@ -87,17 +91,16 @@ export class Previews implements vscode.Disposable {
       return preview.dark ?? (theme === 'dark' || (theme === 'auto' && [vscode.ColorThemeKind.Dark, vscode.ColorThemeKind.HighContrast].includes(vscode.window.activeColorTheme.kind)));
     };
     const describe = async () => {
-      panel.title = pdfFilename(source, preview.variant);
+      panel.title = pdfFilename(source, preview.variant, documentType);
       if (ready && !disposed) await post({ type: 'compileError', message: errors.get(preview.variant) ?? '' });
-      if (ready && !disposed) await post({ type: 'show', variant: preview.variant, native: preview.native, jumps: preview.jumps, dark: isDark(), pdf: pdfs.get(preview.variant), sessions: Object.fromEntries([...sessions].map(([v, s]) => [v, s.url])), tokens: Object.fromEntries([...sessions].map(([v, s]) => [v, s.id])) });
+      if (ready && !disposed) await post({ type: 'show', variant: preview.variant, labels, native: preview.native, jumps: preview.jumps, dark: isDark(), pdf: pdfs.get(preview.variant), sessions: Object.fromEntries([...sessions].map(([v, s]) => [v, s.url])), tokens: Object.fromEntries([...sessions].map(([v, s]) => [v, s.id])) });
     };
     const select = async (value: Variant) => {
       if (disposed) return;
       if (!preview.native && !pdfs.has(value)) {
         if (vscode.workspace.textDocuments.some(doc => doc.isDirty && doc.uri.fsPath.startsWith(bank.root + path.sep))) throw new Error('Sans Tinymist, enregistrez les fichiers de la banque pour actualiser l’aperçu PDF.');
         await post({ type: 'status', message: 'Compilation du PDF…' });
-        const text = (await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(bank.root, source)))).getText();
-        const target = pdfTarget(source, value, identify(text, source)?.type === 'copie');
+        const target = pdfTarget(source, value, documentType === 'copie', documentType);
         await this.fallback.run(bank, ['c', source]);
         pdfs.set(value, (await readFile(path.join(bank.root, target))).toString('base64'));
       }
@@ -114,7 +117,7 @@ export class Previews implements vscode.Disposable {
       await describe();
     };
     const preview: Preview = {
-      bank, source, variant, panel, sessions, native: this.hasTinymist(), jumps: this.hasTinymist(),
+      bank, source, documentType, variant, panel, sessions, native: this.hasTinymist(), jumps: this.hasTinymist(),
       toggleJumps: async () => { preview.jumps = preview.native && !preview.jumps; await describe(); },
       toggleTheme: async () => { preview.dark = !isDark(); if (preview.native) await preview.restart(); else await describe(); },
       select: value => enqueue(() => select(value)),
@@ -153,7 +156,7 @@ export class Previews implements vscode.Disposable {
     webview.html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
       <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource} 'wasm-unsafe-eval'; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource} data: blob:; worker-src ${webview.cspSource} blob:; connect-src ${webview.cspSource}; img-src data: blob: ${webview.cspSource}; frame-src http://127.0.0.1:* https:;">
       <link rel="stylesheet" href="${uri('viewer.css')}"></head><body data-channel="${channel}" data-pdfjs="${escape(webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'pdfjs')).toString())}/">
-      <nav aria-label="Outils de l'aperçu"><button id="enonce" aria-pressed="true">Énoncé</button><button id="corrige" aria-pressed="false">Corrigé</button>
+      <nav aria-label="Outils de l'aperçu"><button id="enonce" aria-pressed="true">${escape(labels.enonce)}</button><button id="corrige" aria-pressed="false">${escape(labels.corrige)}</button>
       <span class="spacer" aria-hidden="true"></span>
       <button id="jumps" title="Sauts source ↔ aperçu" aria-label="Sauts source ↔ aperçu" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></svg></button>
       <button id="theme" title="Mode sombre" aria-label="Mode sombre" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg></button>

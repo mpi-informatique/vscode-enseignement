@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import { searchPriority } from '../src/search-order';
 import assert from 'node:assert/strict';
 import { identify } from '../src/documents';
-import { Exercise, executionCommand, matches, parseCatalogue, parseDiagnostics, pdfTarget, pdfFilename, previewArguments } from '../src/core';
+import { Exercise, executionCommand, matches, parseCatalogue, parseDiagnostics, pdfTarget, pdfFilename, previewArguments, variantLabels } from '../src/core';
 import { exerciseFromTemplate, sheetFromTemplate, outline, vocabulary, mask } from '../src/typst';
 import { hierarchy, isFolder } from '../src/tree';
 import { sheetList, editSheet, sourceMetadata } from '../src/sheet-model';
@@ -24,6 +24,23 @@ test('documents : polys et présentations avec leur propre fonction de mise en p
   assert.equal(identify('#show: text.with(font: "Arial")'), undefined);
   assert.equal(identify('// #show: cours.with(type: "poly")'), undefined);
   assert.throws(() => sheetList(poly, 'poly.typ'));
+});
+
+test('cours et présentation : reconnaissance, paramètres et sorties distinctes', () => {
+  const source = 'chapitres/automates/support.typ';
+  const text = '#show: cours-et-presentation.with(titre: "Automates")';
+  assert.deepEqual(identify(text), { kind: 'document', type: 'cours-presentation', direct: true });
+  assert.equal(identify('// ' + text), undefined);
+  assert.equal(identify('`' + text + '`'), undefined);
+  assert.equal(identify('/* ' + text + ' */'), undefined);
+  const type = identify(text)!.type;
+  assert.deepEqual(variantLabels(type), { enonce: 'Cours', corrige: 'Présentation' });
+  assert.deepEqual(variantLabels('td'), { enonce: 'Énoncé', corrige: 'Corrigé' });
+  for (const [variant, format] of [['enonce', 'cours'], ['corrige', 'presentation']] as const) {
+    assert.deepEqual(previewArguments('/bank', source, variant, true, type), ['--root', '/bank', '--ignore-system-fonts', '--input', `format=${format}`, `/bank/${source}`]);
+    assert.equal(pdfTarget(source, variant, false, type), `build/chapitres/automates/support/${format}.pdf`);
+    assert.equal(pdfFilename(source, variant, type), `support-${format}.pdf`);
+  }
 });
 
 test('copies : lire les CSV du DS, gérer le BOM et les fichiers absents', async () => {

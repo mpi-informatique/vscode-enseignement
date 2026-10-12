@@ -27,7 +27,7 @@ export async function start(bank: Bank, source: string, variant: Variant, option
   const dark = options.dark ?? (theme === 'dark' || (theme === 'auto' && [vscode.ColorThemeKind.Dark, vscode.ColorThemeKind.HighContrast].includes(vscode.window.activeColorTheme.kind)));
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(bank.root, source)));
   const info = identify(document.getText(), source);
-  const args = previewArguments(bank.root, source, variant, info?.direct);
+  const args = previewArguments(bank.root, source, variant, info?.direct, info?.type);
   // Les aperçus des copies utilisent les mêmes statistiques que les exports.
   if (info?.type === 'copie') args.splice(args.length - 1, 0, ...await copyInputs(document.uri.fsPath));
   const settings = { rootPath: bank.root, typstExtraArgs: args.slice(0, -1), exportPdf: 'never',

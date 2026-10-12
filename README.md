@@ -46,11 +46,13 @@ Dans un éditeur Typst ou une liste du panneau, hors des champs de saisie :
 
 Sur Mac, Fn peut être nécessaire. Échap ou **×** efface les filtres actifs du panneau. **Tout replier** et **Basculer dossiers / liste** sont dans **…**.
 
+Pour un fichier utilisant `#show: cours-et-presentation.with(...)`, **F5** compile et affiche le cours, **F6** la présentation. Les boutons de l'aperçu deviennent **Cours** et **Présentation** ; **Maj+F5** et **Maj+F6** exportent les PDF correspondants.
+
 ## Compilation et aperçu
 
 Les commandes appellent `python3 scripts/build.py` dans le dépôt concerné. En mode `auto`, un `flake.nix` déclenche `nix develop path:. -c python3 scripts/build.py …`. Just reste disponible dans les dépôts pour le terminal, mais l'extension n'en dépend pas.
 
-Les exports et le lecteur PDF de secours utilisent l'action `c chemin.typ`, qui compile les deux variantes. Les PDF restent sous `build/<chemin-sans-extension>/`. Pour une copie privée, le corrigé s'appelle `<eleve>-cor.pdf`. Les scripts du privé actualisent les notes avant de compiler les copies.
+Les exports et le lecteur PDF de secours utilisent l'action `c chemin.typ`, qui compile les deux variantes. Les PDF restent sous `build/<chemin-sans-extension>/` : `enonce.pdf` et `corrige.pdf`, ou `cours.pdf` et `presentation.pdf` pour un cours avec présentation. Pour une copie privée, le corrigé s'appelle `<eleve>-cor.pdf`. Les scripts du privé actualisent les notes avant de compiler les copies.
 
 Avec Tinymist, le rendu vectoriel suit les modifications sans enregistrer. Les boutons Énoncé et Corrigé réutilisent leurs sessions. **↔** active les sauts entre source et aperçu, **lune** inverse le thème. L'extension fournit à son moteur Tinymist les chemins de packages de l'environnement Nix : la révision utilisée dans le privé est celle de son `flake.lock`, sans installation utilisateur préalable. Les CSV `notes.csv` et `recapitulatif.csv` actualisent aussi l'aperçu d'une copie.
 
