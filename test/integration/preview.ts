@@ -130,14 +130,14 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
     assert.equal(previews.entries.size, 0);
     const courseSource = 'support.typ';
     const courseUri = vscode.Uri.file(path.join(temporary, courseSource));
-    await writeFile(courseUri.fsPath, `#import "/load.typ": cours-et-presentation, cours-seulement, presentation-seulement
+    await writeFile(courseUri.fsPath, `#import "/load.typ": cours-et-presentation, article-only, slides-only
 #show: cours-et-presentation.with(titre: "Support fictif")
 = Partie commune
 == Contenu commun
 Un contenu partagé entre les deux formats.
-#cours-seulement[== Repère du cours
+#article-only[== Repère du cours
 Une explication réservée au cours.]
-#presentation-seulement[== Repère de la présentation
+#slides-only[== Repère de la présentation
 Une indication réservée à la présentation.]
 `);
     const courseEditor = await vscode.window.showTextDocument(courseUri, { viewColumn: vscode.ViewColumn.One });
