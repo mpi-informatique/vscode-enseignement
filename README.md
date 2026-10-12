@@ -44,6 +44,8 @@ Dans un éditeur Typst ou une liste du panneau, hors des champs de saisie :
 | F5 | Afficher l'énoncé | Exporter l'énoncé |
 | F6 | Afficher le corrigé | Exporter le corrigé |
 
+F5 et F6 fonctionnent aussi lorsque le lecteur PDF ou l’aperçu Tinymist a le focus, y compris dans le champ de numéro de page : ils sélectionnent la variante du document affiché.
+
 Sur Mac, Fn peut être nécessaire. Échap ou **×** efface les filtres actifs du panneau. **Tout replier** et **Basculer dossiers / liste** sont dans **…**.
 
 Pour un fichier utilisant `#show: cours-et-presentation.with(...)`, **F5** compile et affiche le cours, **F6** la présentation. Les boutons de l'aperçu deviennent **Cours** et **Présentation** ; **Maj+F5** et **Maj+F6** exportent les PDF correspondants, nommés `cours-kleene.pdf` et `presentation-kleene.pdf` pour une source `cours-kleene.typ`.

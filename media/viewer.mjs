@@ -155,9 +155,13 @@ window.addEventListener('message', ({ data }) => {
 });
 window.addEventListener('message', event => {
   const data = event.data;
-  if (!['pageProgress', 'pageStep'].includes(data?.type)) return;
+  if (!['pageProgress', 'pageStep', 'selectVariant'].includes(data?.type)) return;
   for (const [variant, frame] of frames) {
     if (event.source !== frame.contentWindow || event.origin !== new URL(frame.src).origin || data.token !== state.tokens?.[variant]) continue;
+    if (data.type === 'selectVariant') {
+      if (state.variant === variant && ['enonce', 'corrige'].includes(data.variant)) vscode.postMessage({ type: data.variant });
+      return;
+    }
     if (data.type === 'pageStep') {
       if (state.variant === variant && [1, -1].includes(data.delta)) goToPage(currentProgress.current + data.delta);
       return;
@@ -168,7 +172,14 @@ window.addEventListener('message', event => {
   }
 });
 window.addEventListener('keydown', event => {
-  if (event.defaultPrevented || event.target.closest?.('input, textarea, [contenteditable="true"]') || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (['F5', 'F6'].includes(event.key)) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    vscode.postMessage({ type: event.key === 'F5' ? 'enonce' : 'corrige' });
+    return;
+  }
+  if (event.target.closest?.('input, textarea, [contenteditable="true"]')) return;
   if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
     event.preventDefault();
     goToPage(currentProgress.current + (event.key === 'ArrowRight' ? 1 : -1));
@@ -178,5 +189,5 @@ window.addEventListener('keydown', event => {
   event.preventDefault();
   const host = document.getElementById('viewers');
   host.scrollBy({ top: (event.key.endsWith('Down') ? 1 : -1) * (event.key.startsWith('Page') ? host.clientHeight * .9 : 60) });
-});
+}, true);
 vscode.postMessage({ type: 'ready' });

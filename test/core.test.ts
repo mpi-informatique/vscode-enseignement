@@ -11,7 +11,7 @@ import { creationPath, contestFromTemplate } from '../src/typst';
 import { Refresh } from '../src/refresh';
 import { bankCandidates } from '../src/discovery';
 import { copyDirectory, copyInputs } from '../src/copy-inputs';
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import { tmpdir } from 'node:os';
 import { runInNewContext } from 'node:vm';
@@ -174,6 +174,64 @@ test('navigation Tinymist : choisir une page, ignorer les messages étrangers et
   listeners.get('keydown')!({ ...key, target: { closest: () => ({}) } });
   listeners.get('keydown')!({ ...key, ctrlKey: true });
   assert.equal(messages.length, count, 'Les champs de saisie et les raccourcis modifiés restent utilisables');
+  for (const [keyName, variant] of [['F5', 'enonce'], ['F6', 'corrige']]) {
+    prevented = false;
+    listeners.get('keydown')!({ ...key, key: keyName, target: { closest: () => ({}) } });
+    assert.equal(prevented, true);
+    assert.equal(messages.at(-1).type, 'selectVariant');
+    assert.equal(messages.at(-1).variant, variant);
+    assert.equal(messages.at(-1).token, 'secret');
+    const count = messages.length;
+    for (const modifier of ['ctrlKey', 'altKey', 'metaKey', 'shiftKey', 'defaultPrevented']) listeners.get('keydown')!({ ...key, key: keyName, [modifier]: true });
+    assert.equal(messages.length, count);
+  }
+});
+test('lecteur : F5/F6 depuis le PDF, la barre et l’iframe active, avec validation des messages', async () => {
+  const listeners = new Map<string, ((event: any) => void)[]>();
+  const messages: any[] = [];
+  const elements = new Map<string, any>();
+  const element = () => ({ dataset: {}, classList: { toggle() {} }, setAttribute() {}, addEventListener() {}, append() {}, remove() {}, contentWindow: { postMessage() {} } });
+  const document = {
+    body: { dataset: { channel: 'test' }, classList: { toggle() {} } },
+    getElementById: (id: string) => { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); },
+    createElement: element
+  };
+  const window = { addEventListener: (type: string, listener: (event: any) => void) => listeners.set(type, [...listeners.get(type) ?? [], listener]) };
+  runInNewContext(await readFile(path.join(process.cwd(), 'media/viewer.mjs'), 'utf8'), {
+    document, window, URL,
+    acquireVsCodeApi: () => ({ postMessage: (message: unknown) => messages.push(message) }),
+    ResizeObserver: class { observe() {} }
+  });
+  const dispatch = (type: string, event: any) => listeners.get(type)?.forEach(listener => listener(event));
+  for (const [key, variant] of [['F5', 'enonce'], ['F6', 'corrige']]) {
+    for (const input of [false, true]) {
+      let prevented = false, stopped = false;
+      const event = { key, target: { closest: () => input ? {} : null }, preventDefault: () => { prevented = true; }, stopImmediatePropagation: () => { stopped = true; } };
+      dispatch('keydown', event);
+      assert.equal(messages.at(-1).type, variant);
+      assert.equal(prevented && stopped, true);
+      const count = messages.length;
+      for (const modifier of ['ctrlKey', 'altKey', 'metaKey', 'shiftKey', 'defaultPrevented']) dispatch('keydown', { ...event, [modifier]: true });
+      assert.equal(messages.length, count);
+    }
+  }
+  dispatch('message', { data: { channel: 'test', type: 'show', native: true, variant: 'enonce', labels: { enonce: 'Cours', corrige: 'Présentation' }, sessions: { enonce: 'http://localhost:123/enonce', corrige: 'http://localhost:123/corrige' }, tokens: { enonce: 'secret', corrige: 'other' } } });
+  // Frames are created in session order; retain their windows to exercise origin/source checks.
+  const frames: any[] = [];
+  document.createElement = () => { const frame = element(); frames.push(frame); return frame; };
+  dispatch('message', { data: { channel: 'test', type: 'reset' } });
+  dispatch('message', { data: { channel: 'test', type: 'show', native: true, variant: 'enonce', labels: { enonce: 'Énoncé', corrige: 'Corrigé' }, sessions: { enonce: 'http://localhost:123/enonce', corrige: 'http://localhost:123/corrige' }, tokens: { enonce: 'secret', corrige: 'other' } } });
+  const event = { source: frames[0].contentWindow, origin: 'http://localhost:123', data: { type: 'selectVariant', token: 'secret', variant: 'corrige' } };
+  const count = messages.length;
+  dispatch('message', { ...event, origin: 'http://foreign.invalid' });
+  dispatch('message', { ...event, source: {} });
+  dispatch('message', { ...event, data: { ...event.data, token: 'incorrect' } });
+  dispatch('message', { ...event, data: { ...event.data, variant: 'save' } });
+  dispatch('message', { ...event, source: frames[1].contentWindow, data: { ...event.data, token: 'other' } });
+  assert.equal(messages.length, count, 'Les messages étrangers, invalides ou provenant d’une variante masquée sont ignorés');
+  dispatch('message', event);
+  assert.equal(messages.length, count + 1);
+  assert.equal(messages.at(-1).type, 'corrige');
 });
 test('commentaires imbriqués et code brut ne créent pas de faux éléments', () => {
   const text = '/* externe /* interne */ question([faux]) */\n`question([faux])`\nquestion([Vrai])';

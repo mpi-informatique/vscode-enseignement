@@ -55,7 +55,14 @@ export function bridgeHtml(html: string, upstream: string, token: string): strin
     schedule();
   });
   addEventListener('keydown', event => {
-    if (event.target.closest?.('input, textarea, [contenteditable="true"]') || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (['F5', 'F6'].includes(event.key)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      parent.postMessage({ type: 'selectVariant', token, variant: event.key === 'F5' ? 'enonce' : 'corrige' }, '*');
+      return;
+    }
+    if (event.target.closest?.('input, textarea, [contenteditable="true"]') || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     parent.postMessage({ type: 'pageStep', token, delta: event.key === 'ArrowRight' ? 1 : -1 }, '*');
