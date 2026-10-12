@@ -14,6 +14,7 @@ import { copyDirectory, copyInputs } from '../src/copy-inputs';
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import { tmpdir } from 'node:os';
+import { runInNewContext } from 'node:vm';
 
 test('documents : polys et présentations avec leur propre fonction de mise en page', () => {
   const poly = '#show: cours.with(type: "poly", titre: "Automates",)';
@@ -134,6 +135,44 @@ test('pont Tinymist : messages du parent et URL de l’aperçu', () => {
   const html = bridgeHtml('<head><style>.hover .typst-text {x:y}.typst-text:hover {x:y}</style></head>new URL("/", window.location.href)', 'http://127.0.0.1:123', 'secret');
   assert.ok(html.includes('event.source !== parent'));
   assert.ok(!html.includes('new URL("/", window.location.href)'));
+});
+test('navigation Tinymist : choisir une page, ignorer les messages étrangers et respecter les champs de saisie', () => {
+  const html = bridgeHtml('<head></head>', 'http://127.0.0.1:123', 'secret');
+  const listeners = new Map<string, (event?: any) => void>();
+  const messages: any[] = [];
+  const queued: (() => void)[] = [];
+  let scrollTop = 0;
+  const viewport = { get scrollTop() { return scrollTop; }, scrollTo: ({ top }: { top: number }) => { scrollTop = top; }, getBoundingClientRect: () => ({ top: 0, bottom: 100, height: 100 }) };
+  const pages = [0, 1, 2].map(index => ({ getAttribute: () => String(index), getBoundingClientRect: () => ({ top: index * 100 - scrollTop, bottom: (index + 1) * 100 - scrollTop }) }));
+  const parent = { postMessage: (message: unknown) => messages.push(message) };
+  runInNewContext(/<script>([\s\S]*?)<\/script>/.exec(html)![1], {
+    parent,
+    document: { getElementById: (id: string) => id === 'typst-container-main' ? viewport : {}, querySelectorAll: () => pages },
+    addEventListener: (type: string, listener: (event?: any) => void) => listeners.set(type, listener),
+    requestAnimationFrame: (callback: () => void) => queued.push(callback), cancelAnimationFrame: () => undefined,
+    MutationObserver: class { observe() {} }
+  });
+  const flush = () => { while (queued.length) queued.shift()!(); };
+  listeners.get('DOMContentLoaded')!(); flush();
+  assert.equal(messages.at(-1).current, 1);
+  assert.equal(messages.at(-1).total, 3);
+  const jump = (page: number, token = 'secret', source = parent) => { listeners.get('message')!({ source, data: { type: 'goToPage', token, page } }); flush(); };
+  jump(2, 'incorrect'); assert.equal(scrollTop, 0);
+  jump(2, 'secret', {} as typeof parent); assert.equal(scrollTop, 0);
+  jump(2); assert.equal(scrollTop, 100); assert.equal(messages.at(-1).current, 2);
+  jump(3); assert.equal(messages.at(-1).current, 3);
+  for (const page of [0, -1, 4, 1.5, NaN]) jump(page);
+  assert.equal(scrollTop, 200, 'Une page absente ou invalide ne déplace pas le lecteur');
+  let prevented = false;
+  const key = { key: 'ArrowLeft', target: { closest: () => null }, preventDefault: () => { prevented = true; }, stopImmediatePropagation: () => undefined };
+  listeners.get('keydown')!(key);
+  assert.equal(prevented, true);
+  assert.equal(messages.at(-1).type, 'pageStep');
+  assert.equal(messages.at(-1).delta, -1);
+  const count = messages.length;
+  listeners.get('keydown')!({ ...key, target: { closest: () => ({}) } });
+  listeners.get('keydown')!({ ...key, ctrlKey: true });
+  assert.equal(messages.length, count, 'Les champs de saisie et les raccourcis modifiés restent utilisables');
 });
 test('commentaires imbriqués et code brut ne créent pas de faux éléments', () => {
   const text = '/* externe /* interne */ question([faux]) */\n`question([faux])`\nquestion([Vrai])';

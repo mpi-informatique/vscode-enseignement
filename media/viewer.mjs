@@ -6,17 +6,59 @@ const compileError = document.getElementById('compile-error');
 const frames = new Map();
 const pagination = new Map();
 const pageProgress = document.getElementById('page-progress');
+const pageNumber = document.getElementById('page-number');
+const pageTotal = document.getElementById('page-total');
+const previousPage = document.getElementById('previous-page');
+const nextPage = document.getElementById('next-page');
 const host = document.getElementById('viewers');
 let pdfPages = 0;
 let progressFrame;
+let currentProgress = { current: 0, total: 0 };
+let requestedPdfPage;
 function showProgress(progress) {
   const { current = 0, total = 0 } = progress ?? {};
-  const text = total ? `${current} / ${total}` : '— / —';
-  if (pageProgress.textContent === text) return;
-  pageProgress.textContent = text;
+  const changed = current !== currentProgress.current || total !== currentProgress.total;
+  currentProgress = { current, total };
+  if (document.activeElement !== pageNumber || !total) pageNumber.value = total ? String(current) : '';
+  pageNumber.disabled = !total;
+  pageNumber.max = String(total);
+  pageTotal.textContent = total ? String(total) : '—';
+  previousPage.disabled = !total || current <= 1;
+  nextPage.disabled = !total || current >= total;
   pageProgress.setAttribute('aria-label', total ? `Page ${current} sur ${total}` : 'Pagination indisponible');
-  vscode.postMessage({ type: 'pageProgress', current, total });
+  if (changed) vscode.postMessage({ type: 'pageProgress', current, total });
 }
+function goToPage(value) {
+  if (!currentProgress.total || !Number.isInteger(value)) return;
+  const page = Math.max(1, Math.min(value, currentProgress.total));
+  if (state?.native) {
+    const frame = frames.get(state.variant);
+    frame?.contentWindow?.postMessage({ token: state.tokens?.[state.variant], type: 'goToPage', page }, new URL(frame.src).origin);
+  } else {
+    requestedPdfPage = page;
+    const target = host.querySelector(`.page[data-page="${page}"]`);
+    if (target) {
+      host.scrollTo({ top: host.scrollTop + target.getBoundingClientRect().top - host.getBoundingClientRect().top });
+      requestedPdfPage = undefined;
+      schedulePdfProgress();
+    }
+  }
+}
+function choosePage() {
+  const value = pageNumber.value === '' ? NaN : Number(pageNumber.value);
+  if (Number.isInteger(value) && currentProgress.total) {
+    pageNumber.value = String(Math.max(1, Math.min(value, currentProgress.total)));
+    goToPage(Number(pageNumber.value));
+  } else pageNumber.value = currentProgress.total ? String(currentProgress.current) : '';
+}
+pageNumber.addEventListener('change', choosePage);
+pageNumber.addEventListener('blur', () => { pageNumber.value = currentProgress.total ? String(currentProgress.current) : ''; });
+pageNumber.addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); choosePage(); pageNumber.blur(); }
+  if (event.key === 'Escape') { event.preventDefault(); pageNumber.value = String(currentProgress.current || ''); pageNumber.blur(); }
+});
+previousPage.onclick = () => goToPage(currentProgress.current - 1);
+nextPage.onclick = () => goToPage(currentProgress.current + 1);
 function updatePdfProgress() {
   if (state?.native) return;
   const bounds = host.getBoundingClientRect();
@@ -44,6 +86,7 @@ async function pdf(data) {
   rendered = data;
   const revision = ++epoch;
   pdfPages = 0;
+  requestedPdfPage = undefined;
   showProgress();
   host.replaceChildren();
   host.scrollTop = 0;
@@ -69,6 +112,7 @@ async function pdf(data) {
       const textLayer = document.createElement('div'); textLayer.className = 'textLayer';
       if (revision !== epoch) break;
       pageView.append(canvas, textLayer); host.append(pageView);
+      if (requestedPdfPage === n) goToPage(n);
       schedulePdfProgress();
       await Promise.all([
         page.render({ canvasContext: canvas.getContext('2d'), canvas, viewport, intent: 'print' }).promise,
@@ -83,7 +127,7 @@ for (const id of ['enonce', 'corrige', 'save', 'jumps', 'theme', 'fullscreen', '
 }
 window.addEventListener('message', ({ data }) => {
   if (data?.channel !== document.body.dataset.channel) return;
-  if (data.type === 'reset') { ++epoch; rendered = undefined; pdfPages = 0; pagination.clear(); showProgress(); for (const frame of frames.values()) frame.remove(); frames.clear(); }
+  if (data.type === 'reset') { ++epoch; rendered = undefined; pdfPages = 0; requestedPdfPage = undefined; pagination.clear(); showProgress(); for (const frame of frames.values()) frame.remove(); frames.clear(); }
   if (data.type === 'status') { status.textContent = data.message; status.hidden = false; }
   if (data.type === 'compileError') { compileError.textContent = data.message; compileError.hidden = !data.message; }
   if (data.type !== 'show') return;
@@ -111,15 +155,25 @@ window.addEventListener('message', ({ data }) => {
 });
 window.addEventListener('message', event => {
   const data = event.data;
-  if (data?.type !== 'pageProgress') return;
+  if (!['pageProgress', 'pageStep'].includes(data?.type)) return;
   for (const [variant, frame] of frames) {
     if (event.source !== frame.contentWindow || event.origin !== new URL(frame.src).origin || data.token !== state.tokens?.[variant]) continue;
+    if (data.type === 'pageStep') {
+      if (state.variant === variant && [1, -1].includes(data.delta)) goToPage(currentProgress.current + data.delta);
+      return;
+    }
     if (!Number.isInteger(data.current) || !Number.isInteger(data.total) || data.total < 1 || data.current < 1 || data.current > data.total) return;
     pagination.set(variant, { current: data.current, total: data.total });
     if (state.variant === variant) showProgress(data);
   }
 });
 window.addEventListener('keydown', event => {
+  if (event.defaultPrevented || event.target.closest?.('input, textarea, [contenteditable="true"]') || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    event.preventDefault();
+    goToPage(currentProgress.current + (event.key === 'ArrowRight' ? 1 : -1));
+    return;
+  }
   if (state?.native || !['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp'].includes(event.key)) return;
   event.preventDefault();
   const host = document.getElementById('viewers');

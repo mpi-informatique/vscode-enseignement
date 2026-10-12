@@ -10,10 +10,11 @@ export function bridgeHtml(html: string, upstream: string, token: string): strin
 <script>
 (() => {
   const token = ${JSON.stringify(token)};
+  const pageSelector = '#typst-app .typst-page-inner[data-page-number], #typst-app .typst-page.canvas-mode[data-page-number]';
   let pending, previous;
   function update() {
     const viewport = document.getElementById('typst-container-main');
-    const pages = [...document.querySelectorAll('#typst-app .typst-page-inner[data-page-number], #typst-app .typst-page.canvas-mode[data-page-number]')];
+    const pages = [...document.querySelectorAll(pageSelector)];
     if (!viewport || !pages.length) return;
     const bounds = viewport.getBoundingClientRect();
     if (!bounds.height) return;
@@ -40,10 +41,25 @@ export function bridgeHtml(html: string, upstream: string, token: string): strin
   });
   addEventListener('message', event => {
     if (event.source !== parent || event.data?.token !== token) return;
+    if (event.data.type === 'goToPage') {
+      const number = event.data.page;
+      if (!Number.isInteger(number) || number < 1) return;
+      const page = [...document.querySelectorAll(pageSelector)].find(page => Number(page.getAttribute('data-page-number')) === number - 1);
+      const viewport = document.getElementById('typst-container-main');
+      if (page && viewport) viewport.scrollTo({ top: viewport.scrollTop + page.getBoundingClientRect().top - viewport.getBoundingClientRect().top });
+      schedule();
+      return;
+    }
     document.documentElement.classList.toggle('exercices-jumps', !!event.data.jumps);
     if (!event.data.jumps) { document.querySelectorAll('.hover').forEach(e => e.classList.remove('hover')); getSelection()?.removeAllRanges(); }
     schedule();
   });
+  addEventListener('keydown', event => {
+    if (event.target.closest?.('input, textarea, [contenteditable="true"]') || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    parent.postMessage({ type: 'pageStep', token, delta: event.key === 'ArrowRight' ? 1 : -1 }, '*');
+  }, true);
 })();
 </script></head>`);
 }
