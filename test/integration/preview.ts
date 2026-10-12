@@ -19,8 +19,10 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
     assert.equal(preview.panel.title, 'test-creation.pdf');
     console.log('Démarrage aperçu (ms)', Date.now() - before);
     let frames = 0;
-    const listener = preview.panel.webview.onDidReceiveMessage(message => { if (message.type === 'frameReady') frames++; });
+    const nativeProgress: { current: number; total: number }[] = [];
+    const listener = preview.panel.webview.onDidReceiveMessage(message => { if (message.type === 'frameReady') frames++; if (message.type === 'pageProgress' && message.total) nativeProgress.push(message); });
     await until(() => frames > 0, "L'iframe Tinymist ne se charge pas");
+    await until(() => nativeProgress.some(progress => progress.current === 1 && progress.total >= 1), 'Pagination du rendu Tinymist');
     const enonce = preview.sessions.get('enonce')!;
     let documentOutline: any;
     enonce.connection.onNotification('tinymist/documentOutline', outline => { documentOutline = outline; });
@@ -105,10 +107,12 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
       const pdfPreview = await fallback.open(previewBank, relative, 'enonce');
       assert.equal(pdfPreview.jumps, false); assert.equal(pdfPreview.native, false);
       let pdfReady = 0;
-      const pdfListener = pdfPreview.panel.webview.onDidReceiveMessage(message => { if (message.type === 'pdfError') console.error(message.error); if (message.type === 'pdfReady') pdfReady++; });
+      let pdfProgress: { current: number; total: number } | undefined;
+      const pdfListener = pdfPreview.panel.webview.onDidReceiveMessage(message => { if (message.type === 'pdfError') console.error(message.error); if (message.type === 'pdfReady') pdfReady++; if (message.type === 'pageProgress' && message.total) pdfProgress = message; });
       pdfPreview.panel.reveal(vscode.ViewColumn.Beside);
       await pdfPreview.restart();
       await until(() => pdfReady > 0, 'PDF affiché sans Tinymist');
+      await until(() => pdfProgress?.current === 1 && pdfProgress.total >= 1, 'Pagination du lecteur PDF de secours');
       await pdfPreview.toggleJumps(); assert.equal(pdfPreview.jumps, false);
       const firstRender = pdfReady;
       await pdfPreview.select('corrige');
@@ -142,6 +146,8 @@ Une indication réservée à la présentation.]
 `);
     const courseEditor = await vscode.window.showTextDocument(courseUri, { viewColumn: vscode.ViewColumn.One });
     const coursePreview = await previews.open(previewBank, courseSource, 'enonce');
+    const courseProgress: { current: number; total: number }[] = [];
+    const courseListener = coursePreview.panel.webview.onDidReceiveMessage(message => { if (message.type === 'pageProgress' && message.total) courseProgress.push(message); });
     assert.equal(coursePreview.documentType, 'cours-presentation');
     assert.match(coursePreview.panel.webview.html, />Cours<\/button>/);
     assert.match(coursePreview.panel.webview.html, />Présentation<\/button>/);
@@ -159,10 +165,14 @@ Une indication réservée à la présentation.]
       await vscode.workspace.applyEdit(edit);
       await until(() => JSON.stringify(renderedOutline)?.includes(marker) ?? false, `${format} : contenu propre au format affiché`);
       assert.ok(!JSON.stringify(renderedOutline).includes(excluded), `${format} : contenu de l'autre format absent`);
+      if (variant === 'corrige') {
+        await until(() => courseProgress.some(progress => progress.total > 1), 'Nombre total de diapositives affiché');
+      }
     }
     await coursePreview.select('enonce');
     assert.equal(coursePreview.sessions.get('enonce'), courseSession, 'La bascule cours/présentation réutilise la session');
     await courseEditor.document.save();
+    courseListener.dispose();
     coursePreview.panel.dispose();
     const courseFallback = new Previews({ extensionUri: extension.extensionUri } as vscode.ExtensionContext, async () => undefined, () => false);
     try {

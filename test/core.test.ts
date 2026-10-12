@@ -132,7 +132,7 @@ test('anciennes feuilles sans virgule finale et nouvelle feuille vide', () => {
 });
 test('pont Tinymist : messages du parent et URL de l’aperçu', () => {
   const html = bridgeHtml('<head><style>.hover .typst-text {x:y}.typst-text:hover {x:y}</style></head>new URL("/", window.location.href)', 'http://127.0.0.1:123', 'secret');
-  assert.ok(html.includes('event.source!==parent'));
+  assert.ok(html.includes('event.source !== parent'));
   assert.ok(!html.includes('new URL("/", window.location.href)'));
 });
 test('commentaires imbriqués et code brut ne créent pas de faux éléments', () => {

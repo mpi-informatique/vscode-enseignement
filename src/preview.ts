@@ -158,6 +158,7 @@ export class Previews implements vscode.Disposable {
       <link rel="stylesheet" href="${uri('viewer.css')}"></head><body data-channel="${channel}" data-pdfjs="${escape(webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'pdfjs')).toString())}/">
       <nav aria-label="Outils de l'aperçu"><button id="enonce" aria-pressed="true">${escape(labels.enonce)}</button><button id="corrige" aria-pressed="false">${escape(labels.corrige)}</button>
       <span class="spacer" aria-hidden="true"></span>
+      <span id="page-progress" role="status" aria-label="Pagination">— / —</span>
       <button id="jumps" title="Sauts source ↔ aperçu" aria-label="Sauts source ↔ aperçu" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></svg></button>
       <button id="theme" title="Mode sombre" aria-label="Mode sombre" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg></button>
       <button id="fullscreen" title="Agrandir l'aperçu" aria-label="Agrandir l'aperçu"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m18 0v5h-5"/></svg></button>

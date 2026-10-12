@@ -7,7 +7,45 @@ export function bridgeHtml(html: string, upstream: string, token: string): strin
     .replaceAll('.hover .typst-text {', 'html.exercices-jumps .hover .typst-text {')
     .replaceAll('.typst-text:hover {', 'html.exercices-jumps .typst-text:hover {')
     .replace('</head>', `<style>html:not(.exercices-jumps) .typst-jump-ripple,html:not(.exercices-jumps) .typst-debug-react-ripple{display:none!important}</style>
-<script>addEventListener('message',event=>{if(event.source!==parent||event.data?.token!==${JSON.stringify(token)})return;document.documentElement.classList.toggle('exercices-jumps',!!event.data.jumps);if(!event.data.jumps){document.querySelectorAll('.hover').forEach(e=>e.classList.remove('hover'));getSelection()?.removeAllRanges();}});</script></head>`);
+<script>
+(() => {
+  const token = ${JSON.stringify(token)};
+  let pending, previous;
+  function update() {
+    const viewport = document.getElementById('typst-container-main');
+    const pages = [...document.querySelectorAll('#typst-app .typst-page-inner[data-page-number], #typst-app .typst-page.canvas-mode[data-page-number]')];
+    if (!viewport || !pages.length) return;
+    const bounds = viewport.getBoundingClientRect();
+    if (!bounds.height) return;
+    let current = 1, total = 0, visible = -1;
+    for (const page of pages) {
+      const number = Number(page.getAttribute('data-page-number')) + 1;
+      total = Math.max(total, number);
+      const rect = page.getBoundingClientRect();
+      const height = Math.max(0, Math.min(rect.bottom, bounds.bottom) - Math.max(rect.top, bounds.top));
+      if (height > visible) { visible = height; current = number; }
+    }
+    const value = current + '/' + total;
+    if (value === previous) return;
+    previous = value;
+    parent.postMessage({ type: 'pageProgress', token, current, total }, '*');
+  }
+  function schedule() { cancelAnimationFrame(pending); pending = requestAnimationFrame(update); }
+  addEventListener('scroll', schedule, { capture: true, passive: true });
+  addEventListener('resize', schedule);
+  addEventListener('DOMContentLoaded', () => {
+    const app = document.getElementById('typst-app');
+    if (app) new MutationObserver(schedule).observe(app, { childList: true, subtree: true, attributes: true });
+    schedule();
+  });
+  addEventListener('message', event => {
+    if (event.source !== parent || event.data?.token !== token) return;
+    document.documentElement.classList.toggle('exercices-jumps', !!event.data.jumps);
+    if (!event.data.jumps) { document.querySelectorAll('.hover').forEach(e => e.classList.remove('hover')); getSelection()?.removeAllRanges(); }
+    schedule();
+  });
+})();
+</script></head>`);
 }
 export async function bridge(port: number, token: string): Promise<{ url: string; dispose(): void }> {
   const upstream = `http://127.0.0.1:${port}`;

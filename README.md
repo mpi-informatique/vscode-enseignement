@@ -58,6 +58,8 @@ Avec Tinymist, le rendu vectoriel suit les modifications sans enregistrer. Les b
 
 Sans Tinymist, un lecteur PDF se recharge à l'enregistrement, sans synchronisation source. Enregistrer les fichiers avant d'exporter. Une erreur de compilation apparaît dans Problems et dans la barre d'état, avec un lien vers le journal.
 
+La barre d'outils indique la page actuellement la plus visible et le nombre total de pages, avec Tinymist comme dans le lecteur PDF de secours. L'indicateur suit le défilement, les recompilations et les changements de variante.
+
 | Réglage | Rôle |
 | --- | --- |
 | `mpiEnseignement.execution` | `auto` par défaut, `nix` ou `direct`. |
