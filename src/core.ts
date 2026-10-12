@@ -11,7 +11,7 @@ export function variantLabels(documentType?: string): Record<Variant, string> {
 
 export function pdfFilename(source: string, variant: Variant, documentType?: string): string {
   safeSource(source);
-  return documentType === 'cours-presentation' ? `${sourceId(source)}-${outputVariant(variant, documentType)}.pdf` : exercisePdfFilename(source, variant);
+  return documentType === 'cours-presentation' ? `${outputVariant(variant, documentType)}-${sourceId(source).replace(/^cours-/, '')}.pdf` : exercisePdfFilename(source, variant);
 }
 
 export function pdfTarget(source: string, variant: Variant, copy = false, documentType?: string): string {

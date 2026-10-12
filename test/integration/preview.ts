@@ -157,7 +157,7 @@ Une indication réservée à la présentation.]
       ['corrige', 'Repère de la présentation', 'Repère du cours', 'presentation']
     ] as const) {
       await coursePreview.select(variant);
-      assert.equal(coursePreview.panel.title, `support-${format}.pdf`);
+      assert.equal(coursePreview.panel.title, `${format}-support.pdf`);
       let renderedOutline: unknown;
       coursePreview.sessions.get(variant)!.connection.onNotification('tinymist/documentOutline', outline => { renderedOutline = outline; });
       const edit = new vscode.WorkspaceEdit();
@@ -177,9 +177,9 @@ Une indication réservée à la présentation.]
     const courseFallback = new Previews({ extensionUri: extension.extensionUri } as vscode.ExtensionContext, async () => undefined, () => false);
     try {
       const pdf = await courseFallback.open(previewBank, courseSource, 'enonce');
-      assert.equal(pdf.panel.title, 'support-cours.pdf');
+      assert.equal(pdf.panel.title, 'cours-support.pdf');
       await pdf.select('corrige');
-      assert.equal(pdf.panel.title, 'support-presentation.pdf');
+      assert.equal(pdf.panel.title, 'presentation-support.pdf');
       for (const format of ['cours', 'presentation']) assert.ok((await stat(path.join(temporary, 'build/support', `${format}.pdf`))).size > 1000);
     } finally { courseFallback.dispose(); }
     vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders!.length, 0, { uri: previewBank.scope, name: previewBank.name });
@@ -190,7 +190,7 @@ Une indication réservée à la présentation.]
     for (const [command, format] of [['enonce', 'cours'], ['corrige', 'presentation']]) {
       await vscode.commands.executeCommand(`mpiEnseignement.${command}`, courseUri);
       assert.equal(api.previewCount(), 1, 'Les commandes F5/F6 réutilisent le même panneau');
-      assert.ok(vscode.window.tabGroups.all.some(group => group.tabs.some(tab => tab.label === `support-${format}.pdf`)), `La commande ${command} affiche ${format}`);
+      assert.ok(vscode.window.tabGroups.all.some(group => group.tabs.some(tab => tab.label === `${format}-support.pdf`)), `La commande ${command} affiche ${format}`);
     }
   } finally {
     for (const socket of sockets) socket.close();

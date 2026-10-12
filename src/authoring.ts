@@ -101,7 +101,9 @@ export async function newSheet(bank: Bank, directory?: string): Promise<vscode.U
   const template = await vscode.window.showQuickPick(templates, { title: 'Type de feuille / modèle' }) ?? canceled();
   const title = await input('Titre de la feuille', template.type === 'td' ? 'Travaux dirigés' : template.label);
   directory ??= await chooseDirectory(template.type === 'devoir' ? 'exercices/devoirs' : 'exercices/feuilles');
-  const identifier = await input('Nom du fichier de la feuille', slug(title), value => /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(value) ? undefined : 'Utilisez des lettres minuscules, chiffres, tirets et traits de soulignement.');
+  const name = slug(title);
+  const suggestedName = ['cours', 'cours-presentation'].includes(template.type) && !name.startsWith('cours-') ? `cours-${name}` : name;
+  const identifier = await input('Nom du fichier de la feuille', suggestedName, value => /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(value) ? undefined : 'Utilisez des lettres minuscules, chiffres, tirets et traits de soulignement.');
   const composition = /^#import\s+"\/templates\/exercice.typ"/m.test(template.text);
   const content = composition ? sheetFromTemplate(template.text, title, []) : contestFromTemplate(template.text, title);
   return create(bank, creationPath(directory, identifier), content);

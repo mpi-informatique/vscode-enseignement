@@ -40,7 +40,8 @@ test('cours et présentation : reconnaissance, paramètres et sorties distinctes
   for (const [variant, format] of [['enonce', 'cours'], ['corrige', 'presentation']] as const) {
     assert.deepEqual(previewArguments('/bank', source, variant, true, type), ['--root', '/bank', '--ignore-system-fonts', '--input', `format=${format}`, `/bank/${source}`]);
     assert.equal(pdfTarget(source, variant, false, type), `build/chapitres/automates/support/${format}.pdf`);
-    assert.equal(pdfFilename(source, variant, type), `support-${format}.pdf`);
+    assert.equal(pdfFilename(source, variant, type), `${format}-support.pdf`);
+    assert.equal(pdfFilename('chapitres/langages/cours-kleene.typ', variant, type), `${format}-kleene.pdf`);
   }
 });
 
