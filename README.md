@@ -56,7 +56,7 @@ Les commandes appellent `python3 scripts/build.py` dans le dépôt concerné. En
 
 Les exports et le lecteur PDF de secours utilisent l'action `c chemin.typ`, qui compile les deux variantes. Les PDF restent sous `build/<chemin-sans-extension>/` : `enonce.pdf` et `corrige.pdf`, ou `cours.pdf` et `presentation.pdf` pour un cours avec présentation. Pour une copie privée, le corrigé s'appelle `<eleve>-cor.pdf`. Les scripts du privé actualisent les notes avant de compiler les copies.
 
-Avec Tinymist, le rendu vectoriel suit les modifications sans enregistrer. Les boutons Énoncé et Corrigé réutilisent leurs sessions. **↔** active les sauts entre source et aperçu, **lune** inverse le thème. L'extension fournit à son moteur Tinymist les chemins de packages de l'environnement Nix : la révision utilisée dans le privé est celle de son `flake.lock`, sans installation utilisateur préalable. Les CSV `notes.csv` et `recapitulatif.csv` actualisent aussi l'aperçu d'une copie.
+Avec Tinymist, le rendu vectoriel suit les modifications sans enregistrer. Les boutons Énoncé et Corrigé réutilisent leurs sessions. L’environnement Nix est préparé en arrière-plan à l’ouverture du dépôt, puis réutilisé pour les nouveaux aperçus jusqu’à un changement des fichiers du dépôt ou des réglages. Les moteurs d’aperçu chargent la source affichée et les modifications non enregistrées ; les fichiers ouverts par le catalogue ne déclenchent pas de compilations supplémentaires. **↔** active les sauts entre source et aperçu, **lune** inverse le thème. L'extension fournit à son moteur Tinymist les chemins de packages de l'environnement Nix : la révision utilisée dans le privé est celle de son `flake.lock`, sans installation utilisateur préalable. Les CSV `notes.csv` et `recapitulatif.csv` actualisent aussi l'aperçu d'une copie.
 
 Sans Tinymist, un lecteur PDF se recharge à l'enregistrement, sans synchronisation source. Enregistrer les fichiers avant d'exporter. Une erreur de compilation apparaît dans Problems et dans la barre d'état, avec un lien vers le journal.
 
@@ -86,7 +86,7 @@ npm run package
 
 Les tests unitaires couvrent la découverte, les métadonnées, les chemins, la composition et les commandes Python/Nix. Les tests d'intégration ouvrent un profil VS Code isolé, utilisent des documents et des copies fictifs, et ne lisent pas les données d'élèves.
 
-Pour une seule suite : `npm run test:integration -- --suite=edition`. Suites : `decouverte`, `edition`, `apercu`, `corrections`, `documents`. Les suites publiques utilisent le clone voisin `../exercices`. La suite `corrections` nécessite les outils de `../exercices-prive`, sans en copier les corrections. Les aperçus natifs nécessitent Tinymist installé.
+Pour une seule suite : `npm run test:integration -- --suite=edition`. Suites : `decouverte`, `edition`, `apercu`, `demarrage`, `corrections`, `documents`. Les suites publiques utilisent le clone voisin `../exercices`. La suite `corrections` nécessite les outils de `../exercices-prive`, sans en copier les corrections. Les aperçus natifs nécessitent Tinymist installé.
 
 Variables de test : `MPI_ENSEIGNEMENT_ROOT` pour le dépôt ouvert, `MPI_PUBLIC_ROOT` pour les outils publics, `MPI_PRIVATE_ROOT` pour les outils privés, `VSCODE_EXECUTABLE` et `TINYMIST_PATH` pour choisir les installations. Consulter [l'organisation du code](scripts/README.md) pour comprendre les différents modules.
 

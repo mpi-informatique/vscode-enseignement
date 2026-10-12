@@ -58,7 +58,7 @@ export async function start(bank: Bank, source: string, variant: Variant, option
     for (const sub of subscriptions) sub.dispose();
     errorStatus.clear(id); page?.dispose(); connection.dispose(); child.kill(); diagnostics.dispose(); output.dispose();
   };
-  child.stderr.on('data', data => output.append(data.toString()));
+  child.stderr.on('data', data => { if (!stopped) output.append(data.toString()); });
   child.on('error', error => { output.appendLine(error.message); connection.dispose(); });
   child.once('exit', () => { if (!stopped) { connection.dispose(); errorStatus.set(id, 'Erreur aperçu Typst', 'Le moteur d’aperçu s’est arrêté. Utilisez ↻ pour le redémarrer.'); } });
   connection.onRequest('workspace/configuration', (request: { items: unknown[] }) => request.items.map(() => settings));
@@ -100,8 +100,12 @@ export async function start(bank: Bank, source: string, variant: Variant, option
       opened.add(doc.uri.toString());
       notify('textDocument/didOpen', { textDocument: { uri: doc.uri.toString(), languageId: 'typst', version: doc.version, text: doc.getText() } });
     };
-    for (const document of vscode.workspace.textDocuments) open(document);
-    subscriptions.push(vscode.workspace.onDidOpenTextDocument(open),
+    // The catalogue opens clean documents for metadata. Mirroring all of them
+    // makes each isolated LSP compile the entire bank before showing its preview.
+    // Disk contents remain available to imports; only unsaved buffers need overlays.
+    open(document);
+    for (const candidate of vscode.workspace.textDocuments) if (candidate.isDirty) open(candidate);
+    subscriptions.push(vscode.workspace.onDidOpenTextDocument(doc => { if (doc.isDirty || doc.uri.toString() === document.uri.toString()) open(doc); }),
       vscode.workspace.onDidChangeTextDocument(event => { if (belongs(event.document) && event.contentChanges.length) {
         quietUntil = Date.now() + 2000;
         errorStatus.clear(id); options.onError?.('');

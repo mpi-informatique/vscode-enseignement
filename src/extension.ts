@@ -18,12 +18,13 @@ import { Refresh } from './refresh';
 import { RecentSources, searchPicker } from './search';
 import { errorStatus } from './errors';
 import { mask } from './typst';
+import { environment, disposeEnvironments } from './environment';
 import { bankCandidates } from './discovery';
 
 export async function activate(context: vscode.ExtensionContext) {
   const runner = new Runner();
   const recentSources = new RecentSources(context.workspaceState);
-  context.subscriptions.push(recentSources);
+  context.subscriptions.push(recentSources, { dispose: disposeEnvironments });
   const library = new Browser('exercices', context.workspaceState);
   const sheets = new Browser('documents', context.workspaceState);
   const browsers = [library, sheets];
@@ -111,6 +112,8 @@ export async function activate(context: vscode.ExtensionContext) {
         const root = await realpath(candidate);
         if (seen.has(root)) continue; seen.add(root);
         const bank: Bank = { root, name: path.basename(root), scope: folder.uri }; banks.push(bank);
+        if (vscode.extensions.getExtension('myriad-dreamin.tinymist') && vscode.workspace.isTrusted)
+          void environment(bank).catch(error => { if (!disposed) runner.output.appendLine(`Préparation de l’environnement [${bank.name}] : ${error}`); });
         try {
           if (hasCatalogue(bank) && !existsSync(path.join(root, 'build/catalogue.json'))) await runner.run(bank, ['catalogue']);
           await load(bank);
