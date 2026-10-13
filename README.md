@@ -8,11 +8,11 @@ Après sa première publication, installer [Exercices MPI depuis le Marketplace]
 
 Pour une installation manuelle, utiliser le VSIX des [versions GitHub](https://github.com/mpi-informatique/vscode-mpi-exercices/releases) ou de `releases/` avec **Extensions → … → Installer à partir d'un VSIX**. Une installation en VSIX désactive par défaut la mise à jour automatique : la réactiver après disponibilité sur le Marketplace.
 
-Ouvrir ensuite le dépôt public ou privé, ou leur dossier parent : les dépôts enfants immédiats sont détectés automatiquement. Pour les consulter ensemble, ouvrir `exercices-prive/enseignement.code-workspace`.
+Ouvrir ensuite le dépôt public ou privé, ou leur dossier parent : les dépôts enfants immédiats sont détectés automatiquement. Pour les consulter ensemble, ouvrir `exercices-prive/exercices.code-workspace`.
 
-L'identifiant est `qfortier.vscode-mpi-exercices`, les réglages utilisent `mpiEnseignement.*`. Désactiver l'ancienne extension Enseignement Typst (`qfortier.vscode-enseignement`) dans cet espace de travail pour éviter les raccourcis en double. Les réglages personnalisés de `mpiExercices.*` peuvent être reportés vers le nouveau préfixe : `makePath` devient `pythonPath`.
+L'identifiant est `qfortier.vscode-mpi-exercices`, les réglages utilisent `mpiExercices.*`. Désactiver l'ancienne extension Enseignement Typst (`qfortier.vscode-enseignement`) dans cet espace de travail pour éviter les raccourcis en double. Les anciens réglages et raccourcis personnalisés doivent utiliser le préfixe `mpiExercices.*` ; `makePath` devient `pythonPath`.
 
-Prérequis : VS Code ≥ 1.100 et Nix avec `nix-command` et `flakes`. Tinymist est recommandé pour l'aperçu à la frappe. Sans Nix, choisir le mode `direct` et fournir Python ≥ 3.11, Typst, les dépendances Typst et, pour le privé, `ENSEIGNEMENT_SOURCE`.
+Prérequis : VS Code ≥ 1.100 et Nix avec `nix-command` et `flakes`. Tinymist est recommandé pour l'aperçu à la frappe. Sans Nix, choisir le mode `direct` et fournir Python ≥ 3.11, Typst, les dépendances Typst et, pour le privé, `EXERCICES_SOURCE`.
 
 ## Utilisation
 
@@ -64,11 +64,11 @@ La barre d'outils indique la page actuellement la plus visible et le nombre tota
 
 | Réglage | Rôle |
 | --- | --- |
-| `mpiEnseignement.execution` | `auto` par défaut, `nix` ou `direct`. |
-| `mpiEnseignement.bankPath` | Racine du dépôt, si différente du dossier ouvert. |
-| `mpiEnseignement.pythonPath` | Exécutable Python dans l'environnement choisi, `python3` par défaut. |
-| `mpiEnseignement.nixPath` | Exécutable Nix. Les installations standard macOS sont détectées. |
-| `mpiEnseignement.previewTheme` | `auto`, `light` ou `dark`. |
+| `mpiExercices.execution` | `auto` par défaut, `nix` ou `direct`. |
+| `mpiExercices.bankPath` | Racine du dépôt, si différente du dossier ouvert. |
+| `mpiExercices.pythonPath` | Exécutable Python dans l'environnement choisi, `python3` par défaut. |
+| `mpiExercices.nixPath` | Exécutable Nix. Les installations standard macOS sont détectées. |
+| `mpiExercices.previewTheme` | `auto`, `light` ou `dark`. |
 
 ## Développement
 
@@ -88,7 +88,7 @@ Les tests unitaires couvrent la découverte, les métadonnées, les chemins, la 
 
 Pour une seule suite : `npm run test:integration -- --suite=edition`. Suites : `decouverte`, `edition`, `apercu`, `demarrage`, `corrections`, `documents`. Les suites publiques utilisent le clone voisin `../exercices`. La suite `corrections` nécessite les outils de `../exercices-prive`, sans en copier les corrections. Les aperçus natifs nécessitent Tinymist installé.
 
-Variables de test : `MPI_ENSEIGNEMENT_ROOT` pour le dépôt ouvert, `MPI_PUBLIC_ROOT` pour les outils publics, `MPI_PRIVATE_ROOT` pour les outils privés, `VSCODE_EXECUTABLE` et `TINYMIST_PATH` pour choisir les installations. Consulter [l'organisation du code](scripts/README.md) pour comprendre les différents modules.
+Variables de test : `MPI_EXERCICES_ROOT` pour le dépôt ouvert, `MPI_PUBLIC_ROOT` pour les outils publics, `MPI_PRIVATE_ROOT` pour les outils privés, `VSCODE_EXECUTABLE` et `TINYMIST_PATH` pour choisir les installations. Consulter [l'organisation du code](scripts/README.md) pour comprendre les différents modules.
 
 Le code reprend l'extension locale `vscode-exercices-mpi`. La licence reste `UNLICENSED`, comme dans le dépôt d'origine. Les licences des composants embarqués sont conservées dans [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 

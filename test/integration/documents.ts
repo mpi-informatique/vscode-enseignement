@@ -62,7 +62,7 @@ for variant in ('enonce', 'corrige'):
       }
     }
     // Aucun catalogue ni aucune cible catalogue n'est nécessaire à ce dépôt.
-    await vscode.commands.executeCommand('mpiEnseignement.refresh');
+    await vscode.commands.executeCommand('mpiExercices.refresh');
     await assert.rejects(readFile(path.join(temporary, 'build/catalogue.json')));
     console.log('Dépôt de documents : modèles, polys, présentations et exports vérifiés.');
   } finally {

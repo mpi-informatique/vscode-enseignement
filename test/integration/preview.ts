@@ -97,7 +97,7 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
     runner.output.show = () => { journalOpened++; };
     await assert.rejects(runner.run(previewBank, ['missing-test-target']));
     assert.equal(journalOpened, 0, "L'erreur n'ouvre pas le journal automatiquement");
-    await vscode.commands.executeCommand('mpiEnseignement.showErrorDetails');
+    await vscode.commands.executeCommand('mpiExercices.showErrorDetails');
     assert.equal(journalOpened, 0, "Le clic ouvre Problems, jamais le journal");
     errorStatus.clear(`build:${previewBank.root}:missing-test-target`);
     runner.output.show = originalShow;
@@ -188,7 +188,7 @@ Une indication réservée à la présentation.]
       catch { return false; }
     }, 'Le support cours/présentation est découvert');
     for (const [command, format] of [['enonce', 'cours'], ['corrige', 'presentation']]) {
-      await vscode.commands.executeCommand(`mpiEnseignement.${command}`, courseUri);
+      await vscode.commands.executeCommand(`mpiExercices.${command}`, courseUri);
       assert.equal(api.previewCount(), 1, 'Les commandes F5/F6 réutilisent le même panneau');
       assert.ok(vscode.window.tabGroups.all.some(group => group.tabs.some(tab => tab.label === `${format}-support.pdf`)), `La commande ${command} affiche ${format}`);
     }

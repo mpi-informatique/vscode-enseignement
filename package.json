@@ -33,119 +33,119 @@
   "contributes": {
     "commands": [
       {
-        "command": "mpiEnseignement.addCurrent",
+        "command": "mpiExercices.addCurrent",
         "title": "Ajouter au document en cours",
         "category": "Exercices MPI",
         "icon": "$(add)"
       },
       {
-        "command": "mpiEnseignement.memberUp",
+        "command": "mpiExercices.memberUp",
         "title": "Monter dans le document",
         "category": "Exercices MPI",
         "icon": "$(arrow-up)"
       },
       {
-        "command": "mpiEnseignement.memberDown",
+        "command": "mpiExercices.memberDown",
         "title": "Descendre dans le document",
         "category": "Exercices MPI",
         "icon": "$(arrow-down)"
       },
       {
-        "command": "mpiEnseignement.memberRemove",
+        "command": "mpiExercices.memberRemove",
         "title": "Retirer du document",
         "category": "Exercices MPI",
         "icon": "$(close)"
       },
       {
-        "command": "mpiEnseignement.deleteSource",
+        "command": "mpiExercices.deleteSource",
         "title": "Supprimer le fichier…",
         "category": "Exercices MPI",
         "icon": "$(trash)"
       },
       {
-        "command": "mpiEnseignement.newFolderLibrary",
+        "command": "mpiExercices.newFolderLibrary",
         "title": "Ajouter un dossier",
         "category": "Exercices MPI",
         "icon": "$(new-folder)"
       },
       {
-        "command": "mpiEnseignement.newFolderSheets",
+        "command": "mpiExercices.newFolderSheets",
         "title": "Ajouter un dossier",
         "category": "Exercices MPI",
         "icon": "$(new-folder)"
       },
       {
-        "command": "mpiEnseignement.searchSheets",
+        "command": "mpiExercices.searchSheets",
         "title": "Rechercher des documents",
         "category": "Exercices MPI",
         "icon": "$(search)"
       },
       {
-        "command": "mpiEnseignement.filtersSheets",
+        "command": "mpiExercices.filtersSheets",
         "title": "Filtrer les documents",
         "category": "Exercices MPI",
         "icon": "$(filter)"
       },
       {
-        "command": "mpiEnseignement.resetSheets",
+        "command": "mpiExercices.resetSheets",
         "title": "Annuler la recherche et les filtres",
         "category": "Exercices MPI",
         "icon": "$(close)"
       },
       {
-        "command": "mpiEnseignement.newExercise",
+        "command": "mpiExercices.newExercise",
         "title": "Ajouter un exercice",
         "category": "Exercices MPI",
         "icon": "$(new-file)"
       },
       {
-        "command": "mpiEnseignement.newSheet",
+        "command": "mpiExercices.newSheet",
         "title": "Créer un document",
         "category": "Exercices MPI",
         "icon": "$(file-add)"
       },
       {
-        "command": "mpiEnseignement.toggleLibrary",
+        "command": "mpiExercices.toggleLibrary",
         "title": "Basculer dossiers / liste",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.toggleSheets",
+        "command": "mpiExercices.toggleSheets",
         "title": "Basculer dossiers / liste des documents",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.search",
+        "command": "mpiExercices.search",
         "title": "Rechercher des exercices",
         "category": "Exercices MPI",
         "icon": "$(search)"
       },
       {
-        "command": "mpiEnseignement.filters",
+        "command": "mpiExercices.filters",
         "title": "Filtrer les exercices",
         "category": "Exercices MPI",
         "icon": "$(filter)"
       },
       {
-        "command": "mpiEnseignement.reset",
+        "command": "mpiExercices.reset",
         "title": "Annuler la recherche et les filtres",
         "category": "Exercices MPI",
         "icon": "$(close)"
       },
       {
-        "command": "mpiEnseignement.refresh",
+        "command": "mpiExercices.refresh",
         "title": "Régénérer le catalogue",
         "category": "Exercices MPI",
         "icon": "$(refresh)"
       },
       {
-        "command": "mpiEnseignement.source",
+        "command": "mpiExercices.source",
         "title": "Afficher le fichier",
         "category": "Exercices MPI",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "mpiEnseignement.enonce",
+        "command": "mpiExercices.enonce",
         "title": "Compiler et afficher l'énoncé",
         "category": "Exercices MPI",
         "icon": {
@@ -154,7 +154,7 @@
         }
       },
       {
-        "command": "mpiEnseignement.corrige",
+        "command": "mpiExercices.corrige",
         "title": "Compiler et afficher le corrigé",
         "category": "Exercices MPI",
         "icon": {
@@ -163,48 +163,48 @@
         }
       },
       {
-        "command": "mpiEnseignement.compileBoth",
+        "command": "mpiExercices.compileBoth",
         "title": "Compiler l'énoncé et le corrigé",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.sync",
+        "command": "mpiExercices.sync",
         "title": "Rejoindre le curseur dans l'aperçu",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.output",
+        "command": "mpiExercices.output",
         "title": "Afficher le journal de compilation",
         "category": "Exercices MPI",
         "icon": "$(output)"
       },
       {
-        "command": "mpiEnseignement.openPanel",
+        "command": "mpiExercices.openPanel",
         "title": "Ouvrir le panneau Exercices MPI",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.collapsecurrent",
+        "command": "mpiExercices.collapsecurrent",
         "title": "Tout replier",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.collapselibrary",
+        "command": "mpiExercices.collapselibrary",
         "title": "Tout replier",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.collapsesheets",
+        "command": "mpiExercices.collapsesheets",
         "title": "Tout replier",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.downloadCorrige",
+        "command": "mpiExercices.downloadCorrige",
         "title": "Télécharger le corrigé (PDF)",
         "category": "Exercices MPI"
       },
       {
-        "command": "mpiEnseignement.downloadEnonce",
+        "command": "mpiExercices.downloadEnonce",
         "title": "Télécharger l'énoncé (PDF)",
         "category": "Exercices MPI"
       }
@@ -212,300 +212,300 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "mpiEnseignement",
+          "id": "mpiExercices",
           "title": "Exercices MPI",
           "icon": "media/library.svg"
         }
       ]
     },
     "views": {
-      "mpiEnseignement": [
+      "mpiExercices": [
         {
-          "id": "mpiEnseignement.current",
+          "id": "mpiExercices.current",
           "name": "Fichier"
         },
         {
-          "id": "mpiEnseignement.library",
+          "id": "mpiExercices.library",
           "name": "Exercices"
         },
         {
-          "id": "mpiEnseignement.sheets",
+          "id": "mpiExercices.sheets",
           "name": "Documents"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "mpiEnseignement.current",
+        "view": "mpiExercices.current",
         "contents": "Ouvrez un fichier Typst pour afficher son plan."
       },
       {
-        "view": "mpiEnseignement.library",
-        "contents": "Ouvrir exercices ou exercices-prive.\n[Régénérer le catalogue](command:mpiEnseignement.refresh)"
+        "view": "mpiExercices.library",
+        "contents": "Ouvrir exercices ou exercices-prive.\n[Régénérer le catalogue](command:mpiExercices.refresh)"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "mpiEnseignement.newFolderLibrary",
-          "when": "view == mpiEnseignement.library",
+          "command": "mpiExercices.newFolderLibrary",
+          "when": "view == mpiExercices.library",
           "group": "navigation@5"
         },
         {
-          "command": "mpiEnseignement.newFolderSheets",
-          "when": "view == mpiEnseignement.sheets",
+          "command": "mpiExercices.newFolderSheets",
+          "when": "view == mpiExercices.sheets",
           "group": "navigation@5"
         },
         {
-          "command": "mpiEnseignement.searchSheets",
-          "when": "view == mpiEnseignement.sheets",
+          "command": "mpiExercices.searchSheets",
+          "when": "view == mpiExercices.sheets",
           "group": "navigation@1"
         },
         {
-          "command": "mpiEnseignement.filtersSheets",
-          "when": "view == mpiEnseignement.sheets",
+          "command": "mpiExercices.filtersSheets",
+          "when": "view == mpiExercices.sheets",
           "group": "navigation@2"
         },
         {
-          "command": "mpiEnseignement.resetSheets",
-          "when": "view == mpiEnseignement.sheets && mpiEnseignement.searchActive.sheets",
+          "command": "mpiExercices.resetSheets",
+          "when": "view == mpiExercices.sheets && mpiExercices.searchActive.sheets",
           "group": "navigation@3"
         },
         {
-          "command": "mpiEnseignement.search",
-          "when": "view == mpiEnseignement.library",
+          "command": "mpiExercices.search",
+          "when": "view == mpiExercices.library",
           "group": "navigation@1"
         },
         {
-          "command": "mpiEnseignement.filters",
-          "when": "view == mpiEnseignement.library",
+          "command": "mpiExercices.filters",
+          "when": "view == mpiExercices.library",
           "group": "navigation@2"
         },
         {
-          "command": "mpiEnseignement.toggleLibrary",
-          "when": "view == mpiEnseignement.library",
+          "command": "mpiExercices.toggleLibrary",
+          "when": "view == mpiExercices.library",
           "group": "display@2"
         },
         {
-          "command": "mpiEnseignement.newExercise",
-          "when": "view == mpiEnseignement.library",
+          "command": "mpiExercices.newExercise",
+          "when": "view == mpiExercices.library",
           "group": "navigation@4"
         },
         {
-          "command": "mpiEnseignement.refresh",
-          "when": "view == mpiEnseignement.library"
+          "command": "mpiExercices.refresh",
+          "when": "view == mpiExercices.library"
         },
         {
-          "command": "mpiEnseignement.reset",
-          "when": "view == mpiEnseignement.library && mpiEnseignement.searchActive.library",
+          "command": "mpiExercices.reset",
+          "when": "view == mpiExercices.library && mpiExercices.searchActive.library",
           "group": "navigation@3"
         },
         {
-          "command": "mpiEnseignement.output",
-          "when": "view == mpiEnseignement.library"
+          "command": "mpiExercices.output",
+          "when": "view == mpiExercices.library"
         },
         {
-          "command": "mpiEnseignement.newSheet",
-          "when": "view == mpiEnseignement.sheets",
+          "command": "mpiExercices.newSheet",
+          "when": "view == mpiExercices.sheets",
           "group": "navigation@4"
         },
         {
-          "command": "mpiEnseignement.toggleSheets",
-          "when": "view == mpiEnseignement.sheets",
+          "command": "mpiExercices.toggleSheets",
+          "when": "view == mpiExercices.sheets",
           "group": "display@2"
         },
         {
-          "command": "mpiEnseignement.collapsecurrent",
-          "when": "view == mpiEnseignement.current",
+          "command": "mpiExercices.collapsecurrent",
+          "when": "view == mpiExercices.current",
           "group": "display@1"
         },
         {
-          "command": "mpiEnseignement.collapselibrary",
-          "when": "view == mpiEnseignement.library",
+          "command": "mpiExercices.collapselibrary",
+          "when": "view == mpiExercices.library",
           "group": "display@1"
         },
         {
-          "command": "mpiEnseignement.collapsesheets",
-          "when": "view == mpiEnseignement.sheets",
+          "command": "mpiExercices.collapsesheets",
+          "when": "view == mpiExercices.sheets",
           "group": "display@1"
         }
       ],
       "view/item/context": [
         {
-          "command": "mpiEnseignement.addCurrent",
+          "command": "mpiExercices.addCurrent",
           "when": "viewItem == exercice",
           "group": "inline@3"
         },
         {
-          "command": "mpiEnseignement.addCurrent",
+          "command": "mpiExercices.addCurrent",
           "when": "viewItem == exercice",
           "group": "selection@1"
         },
         {
-          "command": "mpiEnseignement.memberUp",
+          "command": "mpiExercices.memberUp",
           "when": "viewItem == sheetMember",
           "group": "inline@1"
         },
         {
-          "command": "mpiEnseignement.memberDown",
+          "command": "mpiExercices.memberDown",
           "when": "viewItem == sheetMember",
           "group": "inline@2"
         },
         {
-          "command": "mpiEnseignement.memberRemove",
+          "command": "mpiExercices.memberRemove",
           "when": "viewItem == sheetMember",
           "group": "inline@3"
         },
         {
-          "command": "mpiEnseignement.memberUp",
+          "command": "mpiExercices.memberUp",
           "when": "viewItem == sheetMember",
           "group": "composition@1"
         },
         {
-          "command": "mpiEnseignement.memberDown",
+          "command": "mpiExercices.memberDown",
           "when": "viewItem == sheetMember",
           "group": "composition@2"
         },
         {
-          "command": "mpiEnseignement.memberRemove",
+          "command": "mpiExercices.memberRemove",
           "when": "viewItem == sheetMember",
           "group": "composition@3"
         },
         {
-          "command": "mpiEnseignement.deleteSource",
+          "command": "mpiExercices.deleteSource",
           "when": "viewItem == exercice || viewItem == typstSource",
           "group": "files@2"
         },
         {
-          "command": "mpiEnseignement.newExercise",
-          "when": "view == mpiEnseignement.library && viewItem == sourceFolder",
+          "command": "mpiExercices.newExercise",
+          "when": "view == mpiExercices.library && viewItem == sourceFolder",
           "group": "files@1"
         },
         {
-          "command": "mpiEnseignement.newFolderLibrary",
-          "when": "view == mpiEnseignement.library && viewItem == sourceFolder",
+          "command": "mpiExercices.newFolderLibrary",
+          "when": "view == mpiExercices.library && viewItem == sourceFolder",
           "group": "files@2"
         },
         {
-          "command": "mpiEnseignement.newFolderSheets",
-          "when": "view == mpiEnseignement.sheets && viewItem == sourceFolder",
+          "command": "mpiExercices.newFolderSheets",
+          "when": "view == mpiExercices.sheets && viewItem == sourceFolder",
           "group": "files@2"
         },
         {
-          "command": "mpiEnseignement.enonce",
+          "command": "mpiExercices.enonce",
           "when": "viewItem == exercice || viewItem == typstSource",
           "group": "inline@1"
         },
         {
-          "command": "mpiEnseignement.corrige",
+          "command": "mpiExercices.corrige",
           "when": "viewItem == exercice || viewItem == typstSource",
           "group": "inline@2"
         },
         {
-          "command": "mpiEnseignement.newSheet",
-          "when": "view == mpiEnseignement.sheets && viewItem == sourceFolder",
+          "command": "mpiExercices.newSheet",
+          "when": "view == mpiExercices.sheets && viewItem == sourceFolder",
           "group": "files@1"
         }
       ],
       "editor/title": [
         {
-          "command": "mpiEnseignement.enonce",
+          "command": "mpiExercices.enonce",
           "when": "resourceExtname == .typ",
           "group": "navigation@8"
         },
         {
-          "command": "mpiEnseignement.corrige",
+          "command": "mpiExercices.corrige",
           "when": "resourceExtname == .typ",
           "group": "navigation@9"
         }
       ],
       "explorer/context": [
         {
-          "command": "mpiEnseignement.enonce",
+          "command": "mpiExercices.enonce",
           "when": "resourceExtname == .typ",
-          "group": "mpiEnseignement@1"
+          "group": "mpiExercices@1"
         },
         {
-          "command": "mpiEnseignement.corrige",
+          "command": "mpiExercices.corrige",
           "when": "resourceExtname == .typ",
-          "group": "mpiEnseignement@2"
+          "group": "mpiExercices@2"
         }
       ],
       "commandPalette": [
         {
-          "command": "mpiEnseignement.addCurrent",
+          "command": "mpiExercices.addCurrent",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.memberUp",
+          "command": "mpiExercices.memberUp",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.memberDown",
+          "command": "mpiExercices.memberDown",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.memberRemove",
+          "command": "mpiExercices.memberRemove",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.deleteSource",
+          "command": "mpiExercices.deleteSource",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.newFolderLibrary",
+          "command": "mpiExercices.newFolderLibrary",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.newFolderSheets",
+          "command": "mpiExercices.newFolderSheets",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.resetSheets",
+          "command": "mpiExercices.resetSheets",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.toggleLibrary",
+          "command": "mpiExercices.toggleLibrary",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.toggleSheets",
+          "command": "mpiExercices.toggleSheets",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.reset",
+          "command": "mpiExercices.reset",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.refresh",
+          "command": "mpiExercices.refresh",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.source",
+          "command": "mpiExercices.source",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.compileBoth",
+          "command": "mpiExercices.compileBoth",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.sync",
+          "command": "mpiExercices.sync",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.output",
+          "command": "mpiExercices.output",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.collapsecurrent",
+          "command": "mpiExercices.collapsecurrent",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.collapselibrary",
+          "command": "mpiExercices.collapselibrary",
           "when": "false"
         },
         {
-          "command": "mpiEnseignement.collapsesheets",
+          "command": "mpiExercices.collapsesheets",
           "when": "false"
         }
       ]
@@ -513,7 +513,7 @@
     "configuration": {
       "title": "Exercices MPI",
       "properties": {
-        "mpiEnseignement.previewTheme": {
+        "mpiExercices.previewTheme": {
           "type": "string",
           "enum": [
             "auto",
@@ -524,13 +524,13 @@
           "scope": "resource",
           "description": "Thème des pages : suivre VS Code, clair ou sombre. Les images conservent leurs couleurs."
         },
-        "mpiEnseignement.bankPath": {
+        "mpiExercices.bankPath": {
           "type": "string",
           "default": "",
           "scope": "resource",
           "description": "Chemin du dépôt de contenu. Vide : racine du dossier ouvert ou dépôts enfants immédiats. Ajouter les dépôts public et privé à un même espace de travail pour les consulter ensemble."
         },
-        "mpiEnseignement.execution": {
+        "mpiExercices.execution": {
           "type": "string",
           "enum": [
             "auto",
@@ -541,13 +541,13 @@
           "scope": "resource",
           "description": "Auto utilise Nix si flake.nix existe, sinon Python directement. Ce choix s’applique aussi aux dépendances des aperçus Tinymist."
         },
-        "mpiEnseignement.nixPath": {
+        "mpiExercices.nixPath": {
           "type": "string",
           "default": "nix",
           "scope": "resource",
           "description": "Exécutable Nix ; les installations standard macOS sont détectées."
         },
-        "mpiEnseignement.pythonPath": {
+        "mpiExercices.pythonPath": {
           "type": "string",
           "default": "python3",
           "scope": "resource",
@@ -557,64 +557,64 @@
     },
     "keybindings": [
       {
-        "command": "mpiEnseignement.search",
+        "command": "mpiExercices.search",
         "key": "f2",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.searchSheets",
+        "command": "mpiExercices.searchSheets",
         "key": "shift+f2",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.filters",
+        "command": "mpiExercices.filters",
         "key": "f3",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.filtersSheets",
+        "command": "mpiExercices.filtersSheets",
         "key": "shift+f3",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.newExercise",
+        "command": "mpiExercices.newExercise",
         "key": "f4",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.newSheet",
+        "command": "mpiExercices.newSheet",
         "key": "shift+f4",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.corrige",
+        "command": "mpiExercices.corrige",
         "key": "f6",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.downloadCorrige",
+        "command": "mpiExercices.downloadCorrige",
         "key": "shift+f6",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.enonce",
+        "command": "mpiExercices.enonce",
         "key": "f5",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.downloadEnonce",
+        "command": "mpiExercices.downloadEnonce",
         "key": "shift+f5",
-        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiEnseignement\\./)"
+        "when": "(editorTextFocus && resourceExtname == .typ) || (!inputFocus && focusedView =~ /^mpiExercices\\./)"
       },
       {
-        "command": "mpiEnseignement.reset",
+        "command": "mpiExercices.reset",
         "key": "escape",
-        "when": "focusedView == mpiEnseignement.library && mpiEnseignement.searchActive.library && !inputFocus"
+        "when": "focusedView == mpiExercices.library && mpiExercices.searchActive.library && !inputFocus"
       },
       {
-        "command": "mpiEnseignement.resetSheets",
+        "command": "mpiExercices.resetSheets",
         "key": "escape",
-        "when": "focusedView == mpiEnseignement.sheets && mpiEnseignement.searchActive.sheets && !inputFocus"
+        "when": "focusedView == mpiExercices.sheets && mpiExercices.searchActive.sheets && !inputFocus"
       }
     ]
   },
@@ -630,7 +630,7 @@
   "dependencies": {
     "pdfjs-dist": "6.3.289",
     "vscode-jsonrpc": "8.2.0",
-    "@mpi-informatique/enseignement-core": "file:../exercices/shared"
+    "@mpi-informatique/exercices-core": "file:../exercices/shared"
   },
   "devDependencies": {
     "@types/node": "22.20.4",

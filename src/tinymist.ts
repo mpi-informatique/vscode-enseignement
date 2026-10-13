@@ -25,7 +25,7 @@ export async function start(bank: Bank, source: string, variant: Variant, option
   const binary = vscode.workspace.getConfiguration('tinymist', bank.scope).get<string | null>('serverPath') || path.join(extension.extensionPath, 'out', process.platform === 'win32' ? 'tinymist.exe' : 'tinymist');
   if (!existsSync(binary)) throw new Error('Moteur Tinymist introuvable. Vérifiez son installation ou tinymist.serverPath.');
   const id = `exercices-typst-${randomUUID()}`;
-  const theme = vscode.workspace.getConfiguration('mpiEnseignement', bank.scope).get<string>('previewTheme', 'auto');
+  const theme = vscode.workspace.getConfiguration('mpiExercices', bank.scope).get<string>('previewTheme', 'auto');
   const dark = options.dark ?? (theme === 'dark' || (theme === 'auto' && [vscode.ColorThemeKind.Dark, vscode.ColorThemeKind.HighContrast].includes(vscode.window.activeColorTheme.kind)));
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(bank.root, source)));
   const info = identify(document.getText(), source);

@@ -6,7 +6,7 @@
 
 - Automatiser la publication Marketplace et des VSIX GitHub à partir des tags stables.
 
-- Créer l'extension Exercices MPI pour les dépôts `enseignement` et `enseignement-prive`.
+- Créer l'extension Exercices MPI pour les dépôts `exercices` et `exercices-prive`.
 - Remplacer Make par les scripts Python des dépôts, avec Nix automatique.
 - Adapter la découverte, les modèles et les exports aux nouveaux chemins, dont les PDF des copies privées.
 - Permettre la création d'exercices privés avec le vocabulaire de la bibliothèque publique verrouillée.

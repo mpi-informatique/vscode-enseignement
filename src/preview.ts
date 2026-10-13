@@ -41,8 +41,8 @@ export class Previews implements vscode.Disposable {
       this.timer = setTimeout(() => { void this.sync(event.textEditor).catch(this.report); }, 120);
     }), vscode.window.onDidChangeActiveColorTheme(() => { this.clearPreparation(); this.restart(); }),
     vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('mpiEnseignement') || event.affectsConfiguration('tinymist.serverPath')) this.clearPreparation();
-      if (event.affectsConfiguration('mpiEnseignement.previewTheme')) this.restart();
+      if (event.affectsConfiguration('mpiExercices') || event.affectsConfiguration('tinymist.serverPath')) this.clearPreparation();
+      if (event.affectsConfiguration('mpiExercices.previewTheme')) this.restart();
     }),
     vscode.workspace.onDidSaveTextDocument(doc => { for (const preview of this.entries.values()) if (!preview.native && doc.uri.fsPath.startsWith(preview.bank.root + path.sep)) void preview.restart().catch(this.report); }));
     const statistics = vscode.workspace.createFileSystemWatcher('**/{notes,recapitulatif}.csv');
@@ -64,7 +64,7 @@ export class Previews implements vscode.Disposable {
     this.subscriptions.push(statistics, packages);
   }
   private preparationKey(bank: Bank, source: string, documentType?: string): string {
-    const config = vscode.workspace.getConfiguration('mpiEnseignement', bank.scope);
+    const config = vscode.workspace.getConfiguration('mpiExercices', bank.scope);
     return JSON.stringify([bank.root, source, documentType, config.get('execution'), config.get('nixPath'), config.get('pythonPath'), config.get('previewTheme'), vscode.window.activeColorTheme.kind, vscode.workspace.getConfiguration('tinymist', bank.scope).get('serverPath')]);
   }
 
@@ -109,7 +109,7 @@ export class Previews implements vscode.Disposable {
     const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(bank.root, source)));
     const documentType = identify(document.getText(), source)?.type;
     const labels = variantLabels(documentType);
-    const panel = vscode.window.createWebviewPanel('mpiEnseignement.pdf', pdfFilename(source, variant, documentType), { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
+    const panel = vscode.window.createWebviewPanel('mpiExercices.pdf', pdfFilename(source, variant, documentType), { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
       enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media'), vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'pdfjs')]
     });
     panel.iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'media', 'pdf.svg');
@@ -123,7 +123,7 @@ export class Previews implements vscode.Disposable {
     let queue = Promise.resolve();
     const enqueue = (action: () => Promise<void>) => { const next = queue.catch(() => undefined).then(action); queue = next; return next; };
     const isDark = () => {
-      const theme = vscode.workspace.getConfiguration('mpiEnseignement', bank.scope).get<string>('previewTheme', 'auto');
+      const theme = vscode.workspace.getConfiguration('mpiExercices', bank.scope).get<string>('previewTheme', 'auto');
       return preview.dark ?? (theme === 'dark' || (theme === 'auto' && [vscode.ColorThemeKind.Dark, vscode.ColorThemeKind.HighContrast].includes(vscode.window.activeColorTheme.kind)));
     };
     const describe = async () => {

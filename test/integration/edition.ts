@@ -15,7 +15,7 @@ import { identify } from '../../src/documents';
 import { fixture } from './helpers';
 export async function run(_api: any, _extension?: unknown): Promise<void> {
   const { temporary, previewBank, customTemplate, relative, generated, file } = await fixture();
-  const bank = process.env.MPI_ENSEIGNEMENT_ROOT!;
+  const bank = process.env.MPI_EXERCICES_ROOT!;
   const runner = new Runner();
   try {
     const entries = [{ bank: previewBank, ex: {

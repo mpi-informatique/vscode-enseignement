@@ -29,8 +29,8 @@ export async function activate(context: vscode.ExtensionContext) {
   const sheets = new Browser('documents', context.workspaceState);
   const browsers = [library, sheets];
   const drag = <T>() => new Drag<T>(() => sheetEditor, relocate, error => report(error));
-  const view = vscode.window.createTreeView('mpiEnseignement.library', { treeDataProvider: library, showCollapseAll: false, canSelectMany: true, dragAndDropController: drag<BrowserNode>() });
-  const sheetView = vscode.window.createTreeView('mpiEnseignement.sheets', { treeDataProvider: sheets, showCollapseAll: false, dragAndDropController: drag<BrowserNode>() });
+  const view = vscode.window.createTreeView('mpiExercices.library', { treeDataProvider: library, showCollapseAll: false, canSelectMany: true, dragAndDropController: drag<BrowserNode>() });
+  const sheetView = vscode.window.createTreeView('mpiExercices.sheets', { treeDataProvider: sheets, showCollapseAll: false, dragAndDropController: drag<BrowserNode>() });
   let banks: Bank[] = [];
   let watchers: vscode.Disposable[] = [];
   let disposed = false;
@@ -58,7 +58,7 @@ export async function activate(context: vscode.ExtensionContext) {
       treeView.description = `${browser.visible.length} / ${browser.entries.length}`;
       treeView.message = [browser.filters.type && typeLabel(browser.filters.type), ...facets.filter(key => browser.filters[key]).map(key => `${labels[key]} : ${browser.filters[key]}`), browser.filters.difficulteMax && `Difficulté ≤ ${browser.filters.difficulteMax}`].filter(Boolean).join(' · ') || undefined;
       browser.changed.fire();
-      void vscode.commands.executeCommand('setContext', `mpiEnseignement.searchActive.${['library', 'sheets'][index]}`, browser.searching);
+      void vscode.commands.executeCommand('setContext', `mpiExercices.searchActive.${['library', 'sheets'][index]}`, browser.searching);
       void context.workspaceState.update(browser === library ? 'search' : `search.${browser.category}`, { filters: browser.filters });
     }
   };
@@ -105,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const seen = new Set<string>();
     for (const folder of vscode.workspace.workspaceFolders ?? []) {
       if (folder.uri.scheme !== 'file') continue;
-      const configured = vscode.workspace.getConfiguration('mpiEnseignement', folder.uri).get<string>('bankPath', '');
+      const configured = vscode.workspace.getConfiguration('mpiExercices', folder.uri).get<string>('bankPath', '');
       for (const candidate of await bankCandidates(folder.uri.fsPath, configured)) {
         const project = { root: candidate, name: path.basename(candidate), scope: folder.uri };
         if (!hasCatalogue(project) && !(await documentTemplates(project)).length) continue;
@@ -224,11 +224,11 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidGrantWorkspaceTrust(() => schedulePreparation()),
     vscode.window.onDidChangeActiveColorTheme(() => schedulePreparation()),
     vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('mpiEnseignement') || event.affectsConfiguration('tinymist.serverPath')) schedulePreparation();
+      if (event.affectsConfiguration('mpiExercices') || event.affectsConfiguration('tinymist.serverPath')) schedulePreparation();
     }),
     { dispose: () => clearTimeout(preparationTimer) });
   const register = (name: string, action: (...args: any[]) => unknown) => {
-    context.subscriptions.push(vscode.commands.registerCommand(`mpiEnseignement.${name}`, async (...args: unknown[]) => {
+    context.subscriptions.push(vscode.commands.registerCommand(`mpiExercices.${name}`, async (...args: unknown[]) => {
       try { const result = await action(...args); errorStatus.clear('extension'); return result; } catch (error) { if (error instanceof vscode.CancellationError) return; report(error); }
     }));
   };
@@ -260,14 +260,14 @@ export async function activate(context: vscode.ExtensionContext) {
     const value = await vscode.window.showQuickPick([{ label: 'Tous / toutes', value: '' }, ...values.map(value => ({ label: key === 'type' ? typeLabel(value) : value, value }))], { title: chosen.label }); if (!value) return;
     if (!value.value) delete browser.filters[key]; else if (key === 'difficulteMax') browser.filters.difficulteMax = +value.value; else browser.filters[key] = value.value;
     update();
-    await vscode.commands.executeCommand(`mpiEnseignement.${['library', 'sheets'][index]}.focus`);
+    await vscode.commands.executeCommand(`mpiExercices.${['library', 'sheets'][index]}.focus`);
   });
   register('reset' + suffix, () => { browser.filters = {}; update(); });
   }
-  register('openPanel', () => vscode.commands.executeCommand('workbench.view.extension.mpiEnseignement'));
+  register('openPanel', () => vscode.commands.executeCommand('workbench.view.extension.mpiExercices'));
   for (const section of ['current', 'library', 'sheets']) register('collapse' + section, async () => {
-    await vscode.commands.executeCommand(`mpiEnseignement.${section}.focus`);
-    await vscode.commands.executeCommand(`workbench.actions.treeView.mpiEnseignement.${section}.collapseAll`);
+    await vscode.commands.executeCommand(`mpiExercices.${section}.focus`);
+    await vscode.commands.executeCommand(`workbench.actions.treeView.mpiExercices.${section}.collapseAll`);
   });
   async function revealSheet(source: Source): Promise<void> {
     sheets.filters = {}; update();
@@ -325,7 +325,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(sheetEditor.changed.event(() => { clearTimeout(sheetTimer); sheetTimer = setTimeout(() => { for (const bank of banks) void scan(bank, sheets).catch(report); }, 120); }), { dispose: () => clearTimeout(sheetTimer) });
   context.subscriptions.push(runner, ...browsers, view, sheetView, previews, currentFile, sheetEditor, errorStatus,
     vscode.workspace.onDidChangeWorkspaceFolders(() => { void discoverQueued().then(() => schedulePreparation()).catch(report); }),
-    vscode.workspace.onDidChangeConfiguration(event => { if (event.affectsConfiguration('mpiEnseignement.bankPath')) void discoverQueued().catch(report); }),
+    vscode.workspace.onDidChangeConfiguration(event => { if (event.affectsConfiguration('mpiExercices.bankPath')) void discoverQueued().catch(report); }),
     { dispose: () => { disposed = true; for (const watcher of watchers) watcher.dispose(); } });
   await discoverQueued();
   schedulePreparation();

@@ -33,7 +33,7 @@ function watch(bank: Bank): void {
 }
 
 function configuration(bank: Bank) {
-  const config = vscode.workspace.getConfiguration('mpiEnseignement', bank.scope);
+  const config = vscode.workspace.getConfiguration('mpiExercices', bank.scope);
   let nix = config.get<string>('nixPath', 'nix');
   if (nix === 'nix') nix = ['/nix/var/nix/profiles/default/bin/nix', path.join(os.homedir(), '.nix-profile/bin/nix')].find(existsSync) ?? nix;
   const mode = config.get<'auto' | 'nix' | 'direct'>('execution', 'auto');
@@ -55,7 +55,7 @@ export async function environment(bank: Bank): Promise<NodeJS.ProcessEnv> {
   watch(bank);
   return cache.get(bank.root, JSON.stringify({ mode, flake, nix, python }), async () => {
     const { stdout } = await execute(nix, ['develop', '.', '-c', python, '-c',
-      'import json, os; print(json.dumps({k: os.environ[k] for k in ("TYPST_PACKAGE_PATH", "ENSEIGNEMENT_SOURCE") if k in os.environ}))'],
+      'import json, os; print(json.dumps({k: os.environ[k] for k in ("TYPST_PACKAGE_PATH", "EXERCICES_SOURCE") if k in os.environ}))'],
     { cwd: bank.root, timeout: 240_000, maxBuffer: 1_000_000 });
     return { ...process.env, ...JSON.parse(stdout) };
   });
@@ -63,7 +63,7 @@ export async function environment(bank: Bank): Promise<NodeJS.ProcessEnv> {
 
 export async function libraryRoot(bank: Bank): Promise<string> {
   if (existsSync(path.join(bank.root, 'lib/meta.typ'))) return bank.root;
-  const root = (await environment(bank)).ENSEIGNEMENT_SOURCE;
-  if (!root || !existsSync(path.join(root, 'lib/meta.typ'))) throw new Error('Bibliothèque publique introuvable : utiliser Nix ou définir ENSEIGNEMENT_SOURCE.');
+  const root = (await environment(bank)).EXERCICES_SOURCE;
+  if (!root || !existsSync(path.join(root, 'lib/meta.typ'))) throw new Error('Bibliothèque publique introuvable : utiliser Nix ou définir EXERCICES_SOURCE.');
   return root;
 }

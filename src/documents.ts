@@ -1,6 +1,6 @@
 import { mask } from './typst';
 
-export { typeLabels, typeLabel } from '@mpi-informatique/enseignement-core';
+export { typeLabels, typeLabel } from '@mpi-informatique/exercices-core';
 export const sourceExclusions = '**/{build,lib,templates,ressources,docs,scripts,tmp,node_modules,web,shared,.*}/**';
 export const technicalFolders = new Set(['build', 'lib', 'templates', 'ressources', 'docs', 'scripts', 'tmp', 'node_modules', 'web', 'shared']);
 export interface SourceKind { kind: 'exercice' | 'document'; type?: string; direct: boolean }

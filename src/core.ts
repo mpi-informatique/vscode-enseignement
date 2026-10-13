@@ -1,5 +1,5 @@
-export * from '@mpi-informatique/enseignement-core';
-import { pdfFilename as exercisePdfFilename, safeSource, sourceId, type Variant } from '@mpi-informatique/enseignement-core';
+export * from '@mpi-informatique/exercices-core';
+import { pdfFilename as exercisePdfFilename, safeSource, sourceId, type Variant } from '@mpi-informatique/exercices-core';
 
 export function outputVariant(variant: Variant, documentType?: string): string {
   return documentType === 'cours-presentation' ? (variant === 'enonce' ? 'cours' : 'presentation') : variant;

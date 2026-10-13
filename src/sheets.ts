@@ -81,6 +81,6 @@ export function memberItem(member: SheetMember): vscode.TreeItem {
   item.contextValue = 'sheetMember';
   item.resourceUri = vscode.Uri.file(path.join(member.bank.root, member.source));
   item.tooltip = member.source;
-  item.command = { command: 'mpiEnseignement.source', title: 'Ouvrir l’exercice', arguments: [member] };
+  item.command = { command: 'mpiExercices.source', title: 'Ouvrir l’exercice', arguments: [member] };
   return item;
 }

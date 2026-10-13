@@ -490,7 +490,7 @@ test('recherche : fichiers ouverts, historique récent, puis titres', () => {
 test('découverte : dépôt ouvert, dossier parent et chemin explicite', async () => {
   const temporary = await mkdtemp(path.join(tmpdir(), 'mpi-discovery-'));
   try {
-    const roots = ['enseignement', 'enseignement-prive', 'autre-banque'].map(name => path.join(temporary, name));
+    const roots = ['exercices', 'exercices-prive', 'autre-banque'].map(name => path.join(temporary, name));
     for (const root of roots) {
       await mkdir(path.join(root, 'scripts'), { recursive: true });
       await writeFile(path.join(root, 'scripts/build.py'), '');
@@ -498,7 +498,7 @@ test('découverte : dépôt ouvert, dossier parent et chemin explicite', async (
     await mkdir(path.join(temporary, 'sans-banque'));
     assert.deepEqual((await bankCandidates(temporary)).sort(), [...roots].sort());
     assert.deepEqual(await bankCandidates(roots[0]), [roots[0]]);
-    assert.deepEqual(await bankCandidates(temporary, 'enseignement-prive'), [roots[1]]);
+    assert.deepEqual(await bankCandidates(temporary, 'exercices-prive'), [roots[1]]);
     assert.deepEqual(await bankCandidates(temporary, roots[2]), [roots[2]]);
     assert.deepEqual(await bankCandidates(temporary, 'sans-banque'), []);
     await mkdir(path.join(roots[0], 'imbrique/scripts'), { recursive: true });

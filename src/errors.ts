@@ -25,11 +25,11 @@ class ErrorStatus implements vscode.Disposable {
   private update(): void {
     if (this.typing || !this.entries.size) { this.item?.hide(); return; }
     if (!this.item) {
-      this.item = vscode.window.createStatusBarItem('mpiEnseignement.errors', vscode.StatusBarAlignment.Left, 10);
+      this.item = vscode.window.createStatusBarItem('mpiExercices.errors', vscode.StatusBarAlignment.Left, 10);
       this.item.name = 'Erreurs Exercices MPI';
-      this.item.command = 'mpiEnseignement.showErrorDetails';
+      this.item.command = 'mpiExercices.showErrorDetails';
       this.item.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-      this.command = vscode.commands.registerCommand('mpiEnseignement.showErrorDetails', () => vscode.commands.executeCommand('workbench.actions.view.problems'));
+      this.command = vscode.commands.registerCommand('mpiExercices.showErrorDetails', () => vscode.commands.executeCommand('workbench.actions.view.problems'));
     }
     const last = [...this.entries.values()].at(-1)!;
     this.item.text = `$(error) ${last.title}${this.entries.size > 1 ? ` (${this.entries.size})` : ''}`;

@@ -87,7 +87,7 @@ export class Browser implements vscode.TreeDataProvider<BrowserNode>, vscode.Dis
     if (!ex) item.iconPath = new vscode.ThemeIcon('file-code');
     item.description = ex ? [ex.concours?.nom, `${ex.difficulte}/5`, duration(ex), ex.langages.join(', ')].filter(Boolean).join(' · ') : [node.documentType && typeLabel(node.documentType), this.flat && path.dirname(source)].filter(Boolean).join(' · ');
     item.tooltip = ex ? [ex.titre, source, ex.chapitres.join(', '), ex.niveaux.join(', ')].join('\n') : source;
-    item.command = { command: 'mpiEnseignement.source', title: 'Afficher le fichier', arguments: [node] }; return item;
+    item.command = { command: 'mpiExercices.source', title: 'Afficher le fichier', arguments: [node] }; return item;
   }
   toggle(): void { this.flat = !this.flat; void this.state.update(`flat.${this.category}`, this.flat); this.changed.fire(); }
   dispose(): void { this.changed.dispose(); }

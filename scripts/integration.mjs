@@ -8,11 +8,11 @@ const supported = ['decouverte', 'edition', 'apercu', 'demarrage', 'corrections'
 const suite = process.argv.find(arg => arg.startsWith('--suite='))?.slice('--suite='.length)
   ?? (process.env.MPI_PRIVATE_TEST ? 'corrections' : '');
 if (suite && !supported.includes(suite)) throw new Error(`Suite inconnue : ${suite}. Choisir ${supported.join(', ')}.`);
-const bank = process.env.MPI_ENSEIGNEMENT_ROOT ?? path.resolve(root, '../exercices');
+const bank = process.env.MPI_EXERCICES_ROOT ?? path.resolve(root, '../exercices');
 // VS Code doit démarrer comme application, même depuis un terminal hébergé par Electron.
 delete process.env.ELECTRON_RUN_AS_NODE;
 await mkdir(path.join(root, '.vscode-test'), { recursive: true });
-const userData = await mkdtemp(path.join(tmpdir(), 'enseignement-vscode-'));
+const userData = await mkdtemp(path.join(tmpdir(), 'exercices-vscode-'));
 // L'ajout de dossiers à une fenêtre mono-dossier redémarre l'hôte d'extensions.
 // Démarrer en espace de travail pour garder les suites et leur API dans la même session.
 const workspace = path.join(userData, 'integration.code-workspace');
@@ -28,7 +28,7 @@ try {
     vscodeExecutablePath: process.env.VSCODE_EXECUTABLE ?? (process.platform === 'darwin' && existsSync(localCode) ? localCode : undefined),
     launchArgs: [workspace, '--new-window', '--disable-extensions', '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', '--user-data-dir', userData],
     extensionTestsEnv: {
-      MPI_ENSEIGNEMENT_ROOT: bank,
+      MPI_EXERCICES_ROOT: bank,
       MPI_PUBLIC_ROOT: process.env.MPI_PUBLIC_ROOT ?? path.resolve(root, '../exercices'),
       MPI_PRIVATE_ROOT: process.env.MPI_PRIVATE_ROOT ?? path.resolve(root, '../exercices-prive'),
       MPI_INTEGRATION_SUITE: suite,

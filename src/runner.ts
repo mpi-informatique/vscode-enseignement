@@ -13,7 +13,7 @@ export class Runner implements vscode.Disposable {
   private disposed = false;
   private errorKeys = new Set<string>();
   readonly output = vscode.window.createOutputChannel('Exercices MPI');
-  readonly diagnostics = vscode.languages.createDiagnosticCollection('enseignement');
+  readonly diagnostics = vscode.languages.createDiagnosticCollection('exercices');
 
   run(bank: Bank, targets: string[]): Promise<void> {
     const previous = this.queues.get(bank.root) ?? Promise.resolve();

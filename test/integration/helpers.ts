@@ -7,8 +7,8 @@ import { exerciseFromTemplate } from '../../src/typst';
 import { documentTemplates } from '../../src/authoring';
 
 export async function fixture() {
-  const bank = process.env.MPI_ENSEIGNEMENT_ROOT!;
-  const temporary = await realpath(await mkdtemp(path.join(tmpdir(), 'enseignement-test-')));
+  const bank = process.env.MPI_EXERCICES_ROOT!;
+  const temporary = await realpath(await mkdtemp(path.join(tmpdir(), 'exercices-test-')));
   const previewBank = { root: temporary, name: 'Test isolé', scope: vscode.Uri.file(temporary) };
   try {
     for (const file of ['lib', 'templates', 'scripts', 'justfile', 'nix', 'flake.nix', 'flake.lock', 'typst.toml', 'load.typ']) await cp(path.join(bank, file), path.join(temporary, file), { recursive: true });

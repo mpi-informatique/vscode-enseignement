@@ -17,7 +17,7 @@ export class CurrentFile implements vscode.TreeDataProvider<Node>, vscode.Dispos
     this.current = vscode.window.activeTextEditor?.document;
     if (sheets) this.subscriptions.push(sheets.changed.event(() => this.update()));
     this.update();
-    context.subscriptions.push(vscode.window.createTreeView('mpiEnseignement.current', { treeDataProvider: this, showCollapseAll: false, dragAndDropController }));
+    context.subscriptions.push(vscode.window.createTreeView('mpiExercices.current', { treeDataProvider: this, showCollapseAll: false, dragAndDropController }));
   }
   private update(): void {
     const revision = ++this.revision;
@@ -51,7 +51,7 @@ export class CurrentFile implements vscode.TreeDataProvider<Node>, vscode.Dispos
     item.id = `${this.current?.uri.toString()}:${node.line ?? 'metadata'}:${node.icon}`;
     item.iconPath = new vscode.ThemeIcon(node.icon ?? 'symbol-property');
     if (node.icon === 'file-code') item.resourceUri = node.uri;
-    if (node.uri) item.command = { command: 'mpiEnseignement.reveal', title: 'Afficher dans la source', arguments: [node.uri, node.line] };
+    if (node.uri) item.command = { command: 'mpiExercices.reveal', title: 'Afficher dans la source', arguments: [node.uri, node.line] };
     return item;
   }
   dispose(): void { this.emitter.dispose(); for (const sub of this.subscriptions) sub.dispose(); }
@@ -62,5 +62,5 @@ export async function reveal(uri: vscode.Uri, line = 0): Promise<void> {
   const position = new vscode.Position(Math.min(line, editor.document.lineCount - 1), 0);
   editor.selection = new vscode.Selection(position, position);
   editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
-  await vscode.commands.executeCommand('mpiEnseignement.sync');
+  await vscode.commands.executeCommand('mpiExercices.sync');
 }
