@@ -54,7 +54,7 @@ export async function environment(bank: Bank): Promise<NodeJS.ProcessEnv> {
   if (mode === 'direct' || (mode === 'auto' && !flake)) return { ...process.env };
   watch(bank);
   return cache.get(bank.root, JSON.stringify({ mode, flake, nix, python }), async () => {
-    const { stdout } = await execute(nix, ['develop', 'path:.', '-c', python, '-c',
+    const { stdout } = await execute(nix, ['develop', '.', '-c', python, '-c',
       'import json, os; print(json.dumps({k: os.environ[k] for k in ("TYPST_PACKAGE_PATH", "ENSEIGNEMENT_SOURCE") if k in os.environ}))'],
     { cwd: bank.root, timeout: 240_000, maxBuffer: 1_000_000 });
     return { ...process.env, ...JSON.parse(stdout) };

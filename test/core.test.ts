@@ -368,7 +368,7 @@ test('rejet de chemins sortant de la banque et de chemins non pris en charge', (
   for (const source of ['../test.typ', 'exercices/../test.typ', '/exercices/test.typ', 'exercices/$(shell x).typ', 'exercices/test;exit.typ', 'exercices/test\n.typ']) assert.throws(() => pdfTarget(source, 'enonce'));
 });
 test('Nix automatique pour flake ; exécution directe configurable', () => {
-  assert.deepEqual(executionCommand('auto', true, '/path with spaces/nix', 'python3', ['catalogue']), { command: '/path with spaces/nix', args: ['develop', 'path:.', '-c', 'python3', 'scripts/build.py', 'catalogue'] });
+  assert.deepEqual(executionCommand('auto', true, '/path with spaces/nix', 'python3', ['catalogue']), { command: '/path with spaces/nix', args: ['develop', '.', '-c', 'python3', 'scripts/build.py', 'catalogue'] });
   assert.deepEqual(executionCommand('direct', true, 'nix', '/path with spaces/python', ['c', 'exercices/banque/test.typ']), { command: '/path with spaces/python', args: ['scripts/build.py', 'c', 'exercices/banque/test.typ'] });
   assert.equal(executionCommand('auto', false, 'nix', 'python3', []).command, 'python3');
   assert.equal(executionCommand('nix', false, 'nix', 'python3', []).command, 'nix');

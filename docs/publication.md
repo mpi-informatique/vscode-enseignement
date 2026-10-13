@@ -31,7 +31,7 @@ Le workflow contrôle la concordance du tag, de `package.json` et de `package-lo
 Après les modifications et les vérifications, depuis un dépôt propre sur `main` :
 
 ```sh
-nix develop path:. -c npm version patch
+nix develop . -c npm version patch
 git push origin main --follow-tags
 ```
 

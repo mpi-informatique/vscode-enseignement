@@ -33,7 +33,7 @@ export function previewArguments(root: string, source: string, variant: Variant,
 export function executionCommand(mode: 'auto' | 'nix' | 'direct', flake: boolean, nix: string, python: string, targets: string[]): { command: string; args: string[] } {
   const args = ['scripts/build.py', ...targets];
   return mode === 'nix' || (mode === 'auto' && flake)
-    ? { command: nix, args: ['develop', 'path:.', '-c', python, ...args] }
+    ? { command: nix, args: ['develop', '.', '-c', python, ...args] }
     : { command: python, args };
 }
 

@@ -22,6 +22,6 @@ jobs:
           path: exercices
           persist-credentials: false
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
-      - run: nix develop path:. -c npm ci
-      - run: nix develop path:. -c npm test
-      - run: nix develop path:. -c npm run package
+      - run: nix develop . -c npm ci
+      - run: nix develop . -c npm test
+      - run: nix develop . -c npm run package

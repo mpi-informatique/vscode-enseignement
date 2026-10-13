@@ -42,19 +42,19 @@ jobs:
         run: |
           test "$(git describe --tags --exact-match HEAD)" = "$RELEASE_TAG"
           git merge-base --is-ancestor HEAD origin/main
-          nix develop path:. -c node scripts/check-release.mjs "$RELEASE_TAG"
-      - run: nix develop path:. -c npm ci
-      - run: nix develop path:. -c npm test
-      - run: nix develop path:. -c npm run package
+          nix develop . -c node scripts/check-release.mjs "$RELEASE_TAG"
+      - run: nix develop . -c npm ci
+      - run: nix develop . -c npm test
+      - run: nix develop . -c npm run package
       - name: Publier le VSIX sur le Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           package="releases/vscode-mpi-exercices-${RELEASE_TAG#v}.vsix"
           if [ -n "$VSCE_PAT" ]; then
-            nix develop path:. -c npm run publish:marketplace -- --packagePath "$package"
+            nix develop . -c npm run publish:marketplace -- --packagePath "$package"
           else
-            nix develop path:. -c npm run publish:marketplace -- --packagePath "$package" --oidc
+            nix develop . -c npm run publish:marketplace -- --packagePath "$package" --oidc
           fi
       - name: Joindre le VSIX à la version GitHub
         env:

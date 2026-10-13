@@ -52,7 +52,7 @@ Pour un fichier utilisant `#show: cours-et-presentation.with(...)`, **F5** compi
 
 ## Compilation et aperçu
 
-Les commandes appellent `python3 scripts/build.py` dans le dépôt concerné. En mode `auto`, un `flake.nix` déclenche `nix develop path:. -c python3 scripts/build.py …`. Just reste disponible dans les dépôts pour le terminal, mais l'extension n'en dépend pas.
+Les commandes appellent `python3 scripts/build.py` dans le dépôt concerné. En mode `auto`, un `flake.nix` déclenche `nix develop . -c python3 scripts/build.py …`. Just reste disponible dans les dépôts pour le terminal, mais l'extension n'en dépend pas.
 
 Les exports et le lecteur PDF de secours utilisent l'action `c chemin.typ`, qui compile les deux variantes. Les PDF restent sous `build/<chemin-sans-extension>/` : `enonce.pdf` et `corrige.pdf`, ou `cours.pdf` et `presentation.pdf` pour un cours avec présentation. Pour une copie privée, le corrigé s'appelle `<eleve>-cor.pdf`. Les scripts du privé actualisent les notes avant de compiler les copies.
 
@@ -75,7 +75,7 @@ La barre d'outils indique la page actuellement la plus visible et le nombre tota
 Cloner aussi `mpi-informatique/exercices` dans le dossier voisin `../exercices`. Le package local `../exercices/shared` fournit les types, la validation du catalogue, les filtres et les noms de PDF communs avec le site web. Il est intégré au JavaScript du VSIX à la compilation ; les utilisateurs de l'extension n'ont rien à installer en plus. Les workflows CI fixent la révision publique utilisée pour construire l'extension.
 
 ```sh
-nix develop path:.
+nix develop .
 npm ci
 npm test
 npm run test:integration
