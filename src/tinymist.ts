@@ -12,11 +12,13 @@ import { identify } from './documents';
 import { copyInputs } from './copy-inputs';
 import { environment } from './environment';
 
-export interface Session { id: string; url: string; port: number; connection: MessageConnection; dispose(): void }
+export interface SessionOptions { signal?: AbortSignal; dark?: boolean; background?: boolean; canJump?: () => boolean; onError?: (message: string) => void }
+export interface Session { id: string; url: string; port: number; connection: MessageConnection; readonly alive: boolean; attach(options: SessionOptions): void; dispose(): void }
 
 // Tinymist's shared LSP ignores per-preview root/inputs. An isolated LSP
 // context reuses its installed engine without changing the user's settings.
-export async function start(bank: Bank, source: string, variant: Variant, options: { dark?: boolean; canJump?: () => boolean; onError?: (message: string) => void } = {}): Promise<Session> {
+export async function start(bank: Bank, source: string, variant: Variant, options: SessionOptions = {}): Promise<Session> {
+  options.signal?.throwIfAborted();
   if (!vscode.workspace.isTrusted) throw new Error('Autorisez cet espace de travail pour ouvrir un aperçu.');
   const extension = vscode.extensions.getExtension('myriad-dreamin.tinymist');
   if (!extension) throw new Error('Installez Tinymist pour afficher les aperçus.');
@@ -33,17 +35,20 @@ export async function start(bank: Bank, source: string, variant: Variant, option
   const settings = { rootPath: bank.root, typstExtraArgs: args.slice(0, -1), exportPdf: 'never',
     preview: { refresh: 'onType', invertColors: JSON.stringify({ rest: dark ? 'always' : 'never', image: 'never' }) }, customizedShowDocument: true };
   const env = await environment(bank);
+  options.signal?.throwIfAborted();
   const output = vscode.window.createOutputChannel(`Exercices MPI — ${path.basename(source)} (${variant})`);
   const child = spawn(binary, ['lsp'], { cwd: bank.root, stdio: 'pipe', windowsHide: true, env });
   const connection = createMessageConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
   const subscriptions: vscode.Disposable[] = [];
   const diagnostics = vscode.languages.createDiagnosticCollection(id);
   const errors = new Map<string, string[]>();
+  const diagnosticValues = new Map<string, vscode.Diagnostic[]>();
+  let alive = true;
   let quietUntil = 0;
   let errorTimer: ReturnType<typeof setTimeout> | undefined;
   const publishErrors = () => {
     clearTimeout(errorTimer);
-    if (stopped) return;
+    if (stopped || options.background) return;
     if (Date.now() < quietUntil) { errorTimer = setTimeout(publishErrors, quietUntil - Date.now()); return; }
     const message = [...errors.values()].flat().join('\n');
     if (message) errorStatus.set(id, 'Erreur Typst', message);
@@ -53,24 +58,30 @@ export async function start(bank: Bank, source: string, variant: Variant, option
   let stopped = false;
   let page: Awaited<ReturnType<typeof bridge>> | undefined;
   const dispose = () => {
-    if (stopped) return; stopped = true;
+    page?.dispose(); page = undefined;
+    if (stopped) return; stopped = true; alive = false;
     clearTimeout(errorTimer);
+    options.signal?.removeEventListener('abort', dispose);
     for (const sub of subscriptions) sub.dispose();
-    errorStatus.clear(id); page?.dispose(); connection.dispose(); child.kill(); diagnostics.dispose(); output.dispose();
+    errorStatus.clear(id); connection.dispose(); child.kill(); diagnostics.dispose(); output.dispose();
   };
+  options.signal?.addEventListener('abort', dispose, { once: true });
   child.stderr.on('data', data => { if (!stopped) output.append(data.toString()); });
-  child.on('error', error => { output.appendLine(error.message); connection.dispose(); });
-  child.once('exit', () => { if (!stopped) { connection.dispose(); errorStatus.set(id, 'Erreur aperçu Typst', 'Le moteur d’aperçu s’est arrêté. Utilisez ↻ pour le redémarrer.'); } });
+  child.on('error', error => { alive = false; if (!stopped) output.appendLine(error.message); connection.dispose(); });
+  child.once('exit', () => { alive = false; if (!stopped) { connection.dispose(); if (!options.background) errorStatus.set(id, 'Erreur aperçu Typst', 'Le moteur d’aperçu s’est arrêté. Utilisez ↻ pour le redémarrer.'); } });
   connection.onRequest('workspace/configuration', (request: { items: unknown[] }) => request.items.map(() => settings));
   connection.onRequest('client/registerCapability', () => null);
   connection.onRequest('client/unregisterCapability', () => null);
   connection.onNotification('textDocument/publishDiagnostics', (params: { uri: string; diagnostics: { range: { start: { line: number; character: number }; end: { line: number; character: number } }; message: string; severity?: number }[] }) => {
+    if (stopped) return;
     errors.set(params.uri, params.diagnostics.filter(d => (d.severity ?? 1) === 1).map(d => `${path.relative(bank.root, vscode.Uri.parse(params.uri).fsPath)}:${d.range.start.line + 1} : ${d.message}`));
     publishErrors();
-    diagnostics.set(vscode.Uri.parse(params.uri), params.diagnostics.map(d => new vscode.Diagnostic(new vscode.Range(d.range.start.line, d.range.start.character, d.range.end.line, d.range.end.character), d.message, (d.severity ?? 1) - 1)));
+    const values = params.diagnostics.map(d => new vscode.Diagnostic(new vscode.Range(d.range.start.line, d.range.start.character, d.range.end.line, d.range.end.character), d.message, (d.severity ?? 1) - 1));
+    diagnosticValues.set(params.uri, values);
+    if (!options.background) diagnostics.set(vscode.Uri.parse(params.uri), values);
   });
   const showSource = async (jump: { filepath: string; start: [number, number] | null; end: [number, number] | null }) => {
-    if (options.canJump?.() === false || !jump.start || !jump.end || !path.resolve(jump.filepath).startsWith(bank.root + path.sep)) return;
+    if (options.background || options.canJump?.() === false || !jump.start || !jump.end || !path.resolve(jump.filepath).startsWith(bank.root + path.sep)) return;
     try {
       const uri = vscode.Uri.file(jump.filepath);
       const column = vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === uri.toString())?.viewColumn ?? vscode.ViewColumn.One;
@@ -82,7 +93,7 @@ export async function start(bank: Bank, source: string, variant: Variant, option
   connection.onNotification('tinymist/preview/scrollSource', showSource);
   connection.onRequest('window/showDocument', async (request: { uri: string; selection?: { start: { line: number; character: number }; end: { line: number; character: number } } }) => {
     const uri = vscode.Uri.parse(request.uri);
-    if (options.canJump?.() === false || uri.scheme !== 'file' || !uri.fsPath.startsWith(bank.root + path.sep)) return { success: false };
+    if (options.background || options.canJump?.() === false || uri.scheme !== 'file' || !uri.fsPath.startsWith(bank.root + path.sep)) return { success: false };
     const { start, end } = request.selection ?? { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } };
     await showSource({ filepath: uri.fsPath, start: [start.line, start.character], end: [end.line, end.character] });
     return { success: true };
@@ -94,7 +105,7 @@ export async function start(bank: Bank, source: string, variant: Variant, option
     await connection.sendNotification('initialized', {});
     const belongs = (doc: vscode.TextDocument) => doc.uri.scheme === 'file' && doc.uri.fsPath.startsWith(bank.root + path.sep) && doc.uri.path.endsWith('.typ');
     const opened = new Set<string>();
-    const notify = (method: string, params: object) => { if (!stopped) void connection.sendNotification(method, params).catch(error => output.appendLine(String(error))); };
+    const notify = (method: string, params: object) => { if (!stopped) void connection.sendNotification(method, params).catch(error => { if (!stopped) output.appendLine(String(error)); }); };
     const open = (doc: vscode.TextDocument) => {
       if (!belongs(doc) || opened.has(doc.uri.toString())) return;
       opened.add(doc.uri.toString());
@@ -116,11 +127,21 @@ export async function start(bank: Bank, source: string, variant: Variant, option
     const result = await connection.sendRequest<{ staticServerPort: number }>('workspace/executeCommand', {
       command: 'tinymist.doStartPreview', arguments: [['--task-id', id, '--data-plane-host', '127.0.0.1:0', '--invert-colors', settings.preview.invertColors, args.at(-1)!]]
     });
+    options.signal?.throwIfAborted();
     const port = result?.staticServerPort;
     if (!Number.isInteger(port) || port! < 1 || port! > 65535) throw new Error("Tinymist n'a pas démarré l'aperçu.");
     page = await bridge(port, id);
+    options.signal?.throwIfAborted();
     const uri = await vscode.env.asExternalUri(vscode.Uri.parse(page.url));
-    return { id, port, url: uri.toString(), connection, dispose };
+    options.signal?.throwIfAborted();
+    return { id, port, url: uri.toString(), connection, get alive() { return alive; }, dispose,
+      attach(next) {
+        options.signal?.removeEventListener('abort', dispose);
+        options = next;
+        for (const [uri, values] of diagnosticValues) diagnostics.set(vscode.Uri.parse(uri), values);
+        publishErrors();
+      }
+    };
   } catch (error) { dispose(); throw error; }
 }
 

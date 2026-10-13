@@ -8,6 +8,7 @@ import * as tinymist from './tinymist';
 import { errorStatus } from './errors';
 import { copyDirectory } from './copy-inputs';
 import { identify } from './documents';
+import { Preparation } from './preparation';
 
 export interface Preview {
   bank: Bank; source: string; variant: Variant; panel: vscode.WebviewPanel;
@@ -29,17 +30,24 @@ export class Previews implements vscode.Disposable {
   private timer?: NodeJS.Timeout;
   private editor = vscode.window.activeTextEditor;
   private fallback = new Runner();
-  constructor(private readonly context: vscode.ExtensionContext, private readonly exportPdf: (preview: Preview, variant: Variant) => Promise<void>, private readonly hasTinymist = () => !!vscode.extensions.getExtension('myriad-dreamin.tinymist')) {
+  private prepared = new Preparation<tinymist.Session>();
+  private disposed = false;
+  private preparationEpoch = 0;
+  constructor(private readonly context: vscode.ExtensionContext, private readonly exportPdf: (preview: Preview, variant: Variant) => Promise<void>, private readonly hasTinymist = () => !!vscode.extensions.getExtension('myriad-dreamin.tinymist'), private readonly startTinymist = tinymist.start) {
     this.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => { if (editor?.document.uri.path.endsWith('.typ')) this.editor = editor; }), vscode.window.onDidChangeTextEditorSelection(event => {
       const mode = vscode.workspace.getConfiguration('tinymist').get<string>('preview.scrollSync', 'onSelectionChangeByMouse');
       if (mode === 'never' || event.kind === vscode.TextEditorSelectionChangeKind.Command || (mode === 'onSelectionChangeByMouse' && event.kind !== vscode.TextEditorSelectionChangeKind.Mouse)) return;
       clearTimeout(this.timer);
       this.timer = setTimeout(() => { void this.sync(event.textEditor).catch(this.report); }, 120);
-    }), vscode.window.onDidChangeActiveColorTheme(() => this.restart()),
-    vscode.workspace.onDidChangeConfiguration(event => { if (event.affectsConfiguration('mpiEnseignement.previewTheme')) this.restart(); }),
+    }), vscode.window.onDidChangeActiveColorTheme(() => { this.clearPreparation(); this.restart(); }),
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('mpiEnseignement') || event.affectsConfiguration('tinymist.serverPath')) this.clearPreparation();
+      if (event.affectsConfiguration('mpiEnseignement.previewTheme')) this.restart();
+    }),
     vscode.workspace.onDidSaveTextDocument(doc => { for (const preview of this.entries.values()) if (!preview.native && doc.uri.fsPath.startsWith(preview.bank.root + path.sep)) void preview.restart().catch(this.report); }));
     const statistics = vscode.workspace.createFileSystemWatcher('**/{notes,recapitulatif}.csv');
     const updateStatistics = (uri: vscode.Uri) => {
+      this.clearPreparation();
       for (const preview of this.entries.values()) {
         if (path.dirname(uri.fsPath) === copyDirectory(path.join(preview.bank.root, preview.source)))
           void preview.restart().catch(this.report);
@@ -48,8 +56,36 @@ export class Previews implements vscode.Disposable {
     statistics.onDidChange(updateStatistics);
     statistics.onDidCreate(updateStatistics);
     statistics.onDidDelete(updateStatistics);
-    this.subscriptions.push(statistics);
+    const packages = vscode.workspace.createFileSystemWatcher('**/{*.nix,flake.lock,typst.toml,typst-packages.json}');
+    const invalidatePackages = () => this.clearPreparation();
+    packages.onDidChange(invalidatePackages);
+    packages.onDidCreate(invalidatePackages);
+    packages.onDidDelete(invalidatePackages);
+    this.subscriptions.push(statistics, packages);
   }
+  private preparationKey(bank: Bank, source: string, documentType?: string): string {
+    const config = vscode.workspace.getConfiguration('mpiEnseignement', bank.scope);
+    return JSON.stringify([bank.root, source, documentType, config.get('execution'), config.get('nixPath'), config.get('pythonPath'), config.get('previewTheme'), vscode.window.activeColorTheme.kind, vscode.workspace.getConfiguration('tinymist', bank.scope).get('serverPath')]);
+  }
+
+  clearPreparation(): void { this.preparationEpoch++; this.prepared.clear(); }
+
+  async prepare(bank: Bank, source: string): Promise<void> {
+    if (this.disposed || !this.hasTinymist() || !vscode.workspace.isTrusted) return;
+    const current = this.entries.get(`${bank.root}/${source}`);
+    if (current && (!current.native || current.dark !== undefined)) return;
+    const variants: Variant[] = current ? (['enonce', 'corrige'] as Variant[]).filter(variant => variant !== current.variant && !current.sessions.has(variant)) : ['enonce', 'corrige'];
+    if (!variants.length) return;
+    const epoch = ++this.preparationEpoch;
+    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(bank.root, source)));
+    if (this.disposed || epoch !== this.preparationEpoch || this.entries.get(`${bank.root}/${source}`) !== current) return;
+    const info = identify(document.getText(), source);
+    if (!info) { this.prepared.clear(); return; }
+    await this.prepared.warm(this.preparationKey(bank, source, info.type), variants,
+      (variant, signal) => this.startTinymist(bank, source, variant as Variant, { signal, background: true, canJump: () => false }),
+      error => { if (!this.disposed) this.fallback.output.appendLine(`Préparation de Tinymist [${source}] : ${error}`); });
+  }
+
   private report = (error: unknown): void => {
     if (!errorStatus.has(error)) {
       this.fallback.output.appendLine(String(error));
@@ -106,9 +142,13 @@ export class Previews implements vscode.Disposable {
       }
       if (preview.native && !sessions.has(value)) {
         await post({ type: 'status', message: 'Démarrage de Tinymist…' });
-        const session = await tinymist.start(bank, source, value, { dark: isDark(), canJump: () => preview.jumps && preview.variant === value && panel.visible,
+        const options: tinymist.SessionOptions = { dark: isDark(), canJump: () => preview.jumps && preview.variant === value && panel.visible,
           onError: message => { errors.set(value, message); if (ready && !disposed && preview.variant === value) void post({ type: 'compileError', message }); }
-        });
+        };
+        let session = preview.dark === undefined ? await this.prepared.take(this.preparationKey(bank, source, documentType), value) : undefined;
+        if (session && !session.alive) { session.dispose(); session = undefined; }
+        session ??= await this.startTinymist(bank, source, value, options);
+        session.attach(options);
         if (disposed) { await tinymist.stop(session); return; }
         sessions.set(value, session);
       }
@@ -123,6 +163,7 @@ export class Previews implements vscode.Disposable {
       select: value => enqueue(() => select(value)),
       restart: () => enqueue(async () => {
         if (disposed) return;
+        this.prepared.clear(this.preparationKey(bank, source, documentType));
         await post({ type: 'reset' });
         pdfs.clear();
         errors.clear();
@@ -145,6 +186,7 @@ export class Previews implements vscode.Disposable {
       } catch (error) { if (!disposed) { this.report(error); await post({ type: 'status', message: String(error) }); } }
     });
     panel.onDidDispose(() => {
+      this.prepared.clear(this.preparationKey(bank, source, documentType));
       disposed = true; listener.dispose(); this.entries.delete(key);
       for (const session of sessions.values()) void tinymist.stop(session).catch(() => undefined);
       sessions.clear();
@@ -170,9 +212,13 @@ export class Previews implements vscode.Disposable {
       <button id="save" title="Exporter le PDF…" aria-label="Exporter le PDF"><svg width="16" height="16" viewBox="0 0 21 21" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h12l3 3v12H3zM6 3v6h8V3M6 18v-6h9v6"/></svg></button></nav>
       <p id="compile-error" role="alert" hidden></p><p id="status" role="status">Chargement…</p><main id="viewers"></main>
       <script nonce="${nonce}" src="${uri('viewer.mjs')}" type="module"></script></body></html>`;
-    try { await preview.select(variant); return preview; }
+    try {
+      await preview.select(variant);
+      void this.prepare(bank, source).catch(error => { if (!this.disposed) this.fallback.output.appendLine(String(error)); });
+      return preview;
+    }
     catch (error) { panel.dispose(); throw error; }
   }
 
-  dispose(): void { errorStatus.clear('preview'); this.fallback.dispose(); clearTimeout(this.timer); for (const sub of this.subscriptions) sub.dispose(); for (const preview of [...this.entries.values()]) preview.panel.dispose(); }
+  dispose(): void { this.disposed = true; this.prepared.dispose(); errorStatus.clear('preview'); this.fallback.dispose(); clearTimeout(this.timer); for (const sub of this.subscriptions) sub.dispose(); for (const preview of [...this.entries.values()]) preview.panel.dispose(); }
 }

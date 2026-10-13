@@ -194,6 +194,39 @@ export async function activate(context: vscode.ExtensionContext) {
     if (from.toString() !== destination.toString()) await vscode.workspace.fs.copy(from, destination, { overwrite: true });
   }
   const previews = new Previews(context, exportPdf);
+  let preparationTimer: NodeJS.Timeout | undefined;
+  let preparationSource: string | undefined;
+  function schedulePreparation(editor = vscode.window.activeTextEditor): void {
+    clearTimeout(preparationTimer);
+    // Focusing the viewer must keep the reserve for the displayed source.
+    if (!editor) return;
+    const uri = editor.document.uri;
+    if (uri.toString() !== preparationSource) previews.clearPreparation();
+    preparationSource = uri.toString();
+    if (uri.scheme !== 'file' || !uri.path.endsWith('.typ')) return;
+    preparationTimer = setTimeout(() => {
+      void discovery.then(async () => {
+        if (disposed || vscode.window.activeTextEditor?.document.uri.toString() !== uri.toString()) return;
+        const file = await realpath(uri.fsPath);
+        if (disposed || vscode.window.activeTextEditor?.document.uri.toString() !== uri.toString()) return;
+        const bank = banks.filter(bank => file.startsWith(bank.root + path.sep)).sort((a, b) => b.root.length - a.root.length)[0];
+        if (!bank) return;
+        await previews.prepare(bank, path.relative(bank.root, file).split(path.sep).join('/'));
+      }).catch(error => { if (!disposed) runner.output.appendLine(`Préparation de l’aperçu : ${error}`); });
+    }, 600);
+  }
+  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(schedulePreparation),
+    vscode.workspace.onDidCloseTextDocument(document => {
+      if (document.uri.toString() !== preparationSource) return;
+      clearTimeout(preparationTimer);
+      previews.clearPreparation();
+    }),
+    vscode.workspace.onDidGrantWorkspaceTrust(() => schedulePreparation()),
+    vscode.window.onDidChangeActiveColorTheme(() => schedulePreparation()),
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('mpiEnseignement') || event.affectsConfiguration('tinymist.serverPath')) schedulePreparation();
+    }),
+    { dispose: () => clearTimeout(preparationTimer) });
   const register = (name: string, action: (...args: any[]) => unknown) => {
     context.subscriptions.push(vscode.commands.registerCommand(`mpiEnseignement.${name}`, async (...args: unknown[]) => {
       try { const result = await action(...args); errorStatus.clear('extension'); return result; } catch (error) { if (error instanceof vscode.CancellationError) return; report(error); }
@@ -291,10 +324,11 @@ export async function activate(context: vscode.ExtensionContext) {
   let sheetTimer: NodeJS.Timeout | undefined;
   context.subscriptions.push(sheetEditor.changed.event(() => { clearTimeout(sheetTimer); sheetTimer = setTimeout(() => { for (const bank of banks) void scan(bank, sheets).catch(report); }, 120); }), { dispose: () => clearTimeout(sheetTimer) });
   context.subscriptions.push(runner, ...browsers, view, sheetView, previews, currentFile, sheetEditor, errorStatus,
-    vscode.workspace.onDidChangeWorkspaceFolders(() => { void discoverQueued().catch(report); }),
+    vscode.workspace.onDidChangeWorkspaceFolders(() => { void discoverQueued().then(() => schedulePreparation()).catch(report); }),
     vscode.workspace.onDidChangeConfiguration(event => { if (event.affectsConfiguration('mpiEnseignement.bankPath')) void discoverQueued().catch(report); }),
     { dispose: () => { disposed = true; for (const watcher of watchers) watcher.dispose(); } });
   await discoverQueued();
+  schedulePreparation();
   return {
     getEntries: () => entries().map(({ bank, ex }) => ({ bank: bank.root, ...ex })),
     search: (query: string, filters: Filters = {}) => entries().filter(({ ex }) => matches(ex, query, filters)).map(({ ex }) => ex),

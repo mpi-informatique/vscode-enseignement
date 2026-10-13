@@ -10,6 +10,7 @@ import { bridgeHtml } from '../src/preview-bridge';
 import { creationPath, contestFromTemplate } from '../src/typst';
 import { Refresh } from '../src/refresh';
 import { EnvironmentCache } from '../src/environment-cache';
+import { Preparation } from '../src/preparation';
 import { bankCandidates } from '../src/discovery';
 import { copyDirectory, copyInputs } from '../src/copy-inputs';
 import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
@@ -47,6 +48,62 @@ test('environnement : réutiliser Nix, invalider les sources et réglages, rées
   assert.equal(await cache.get('public', 'nix', load), fresh, 'Un ancien chargement ne restaure pas une entrée invalidée');
   cache.clear();
   assert.notEqual(await cache.get('private', 'nix', load), privateValue);
+});
+test('préparation : deux variantes partagées, transfert de propriété et nettoyage des réserves', async () => {
+  const preparation = new Preparation<{ dispose(): void }>();
+  const stopped: string[] = [];
+  let starts = 0;
+  const load = async (variant: string) => { starts++; return { dispose: () => { stopped.push(variant); } }; };
+  await Promise.all([
+    preparation.warm('cours', ['enonce', 'corrige'], load, error => { throw error; }),
+    preparation.warm('cours', ['enonce', 'corrige'], load, error => { throw error; })
+  ]);
+  assert.equal(starts, 2);
+  const course = await preparation.take('cours', 'enonce');
+  assert.ok(course);
+  assert.equal(await preparation.take('autre', 'corrige'), undefined);
+  preparation.clear();
+  await Promise.resolve();
+  assert.deepEqual(stopped, ['corrige'], 'Seule la variante encore en réserve est arrêtée');
+  course.dispose();
+  assert.deepEqual(stopped, ['corrige', 'enonce']);
+  preparation.dispose();
+  await preparation.warm('autre', ['enonce'], load, error => { throw error; });
+  assert.equal(starts, 2, 'Une préparation détruite ne redémarre aucun moteur');
+});
+test('préparation : abandon et récupération pendant le démarrage, puis reprise après erreur', async () => {
+  const preparation = new Preparation<{ dispose(): void }>();
+  let finish!: (value: { dispose(): void }) => void;
+  let stopped = 0;
+  let signal!: AbortSignal;
+  const pending = (_variant: string, nextSignal: AbortSignal) => new Promise<{ dispose(): void }>(resolve => { finish = resolve; signal = nextSignal; });
+  const resource = () => ({ dispose: () => { stopped++; } });
+  const abandoned = preparation.warm('ancien', ['enonce'], pending, error => { throw error; });
+  await Promise.resolve();
+  preparation.clear();
+  assert.equal(signal.aborted, true, 'Le chargement abandonné reçoit aussi un signal d’annulation');
+  finish(resource());
+  await abandoned;
+  assert.equal(stopped, 1, 'Un moteur abandonné est arrêté dès la fin de son démarrage');
+  const warming = preparation.warm('cours', ['enonce'], pending, error => { throw error; });
+  await Promise.resolve();
+  const taken = preparation.take('cours', 'enonce');
+  preparation.clear();
+  assert.equal(signal.aborted, false, 'La récupération transfère aussi la responsabilité de l’annulation');
+  finish(resource());
+  await warming;
+  const owned = await taken;
+  assert.ok(owned);
+  assert.equal(stopped, 1, 'Une demande F5 conserve le moteur même si le fichier actif change entre-temps');
+  owned.dispose();
+  const failures: unknown[] = [];
+  await preparation.warm('cours', ['enonce'], async () => { throw new Error('échec provisoire'); }, error => failures.push(error));
+  assert.equal(failures.length, 1);
+  await preparation.warm('cours', ['enonce'], async () => resource(), error => { throw error; });
+  const retried = await preparation.take('cours', 'enonce');
+  assert.ok(retried, 'Une préparation échouée peut être relancée');
+  retried.dispose();
+  preparation.dispose();
 });
 test('documents : polys et présentations avec leur propre fonction de mise en page', () => {
   const poly = '#show: cours.with(type: "poly", titre: "Automates",)';
