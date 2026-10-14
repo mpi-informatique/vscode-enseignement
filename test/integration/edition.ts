@@ -134,18 +134,18 @@ export async function run(_api: any, _extension?: unknown): Promise<void> {
     await sheetDocument.save(); sheetEditor.dispose();
     await runner.run(previewBank, ['c', 'exercices/feuilles/test-creation.typ']);
     await runner.run(previewBank, ['c', devoirPath]);
-    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, `build/exercices/devoirs/2026-2027/ds-test/${variant}.pdf`))).size > 1000);
+    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, `build/exercices/devoirs/2026-2027/ds-test/ds-test${variant === 'corrige' ? '-cor' : ''}.pdf`))).size > 1000);
     // No category prefix, no mandatory year folder, and a new type without code changes.
     const customSource = sheetFromTemplate(customTemplate, 'Colle à la racine', [relative]);
     await writeFile(path.join(temporary, 'colle-test.typ'), customSource);
     assert.equal(identify(customSource, 'colle-test.typ')?.type, 'colle');
     await runner.run(previewBank, ['c', 'colle-test.typ']);
-    assert.ok((await stat(path.join(temporary, 'build/colle-test/corrige.pdf'))).size > 1000);
+    assert.ok((await stat(path.join(temporary, 'build/colle-test/colle-test-cor.pdf'))).size > 1000);
     const contestPath = creationPath('exercices/concours/24', 'sujet-test');
     await mkdir(path.join(temporary, 'exercices/concours/24'), { recursive: true });
     await writeFile(path.join(temporary, contestPath), contestFromTemplate(await readFile(path.join(temporary, 'templates/sujet-concours.typ'), 'utf8'), 'Sujet de test'));
     await runner.run(previewBank, ['c', contestPath]);
-    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/exercices/concours/24/sujet-test', variant + '.pdf'))).size > 1000);
+    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/exercices/concours/24/sujet-test', `sujet-test${variant === 'corrige' ? '-cor' : ''}.pdf`))).size > 1000);
     assert.equal(relocated('#import "../../../lib/exercice.typ": exercice\n#image("../../../ressources/a.png")', relative, relative, 'exercices/test-creation.typ'), '#import "../lib/exercice.typ": exercice\n#image("../ressources/a.png")');
     assert.ok((await directories(previewBank, 'exercices')).some(item => item.source === 'exercices/banque/graphes'));
     await moveSource({ bank: previewBank, source: relative }, 'test-creation.typ');

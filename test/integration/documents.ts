@@ -29,7 +29,7 @@ if sys.argv[1] != 'c':
     raise SystemExit('Commande inconnue')
 source = Path(sys.argv[2])
 for variant in ('enonce', 'corrige'):
-    output = Path('build') / source.with_suffix('') / (variant + '.pdf')
+    output = Path('build') / source.with_suffix('') / (source.stem + ('-cor' if variant == 'corrige' else '') + '.pdf')
     output.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(['typst', 'compile', '--root', '.', '--input', 'corrige=' + str(variant == 'corrige').lower(), str(source), str(output)], check=True)
 `);
@@ -58,7 +58,7 @@ for variant in ('enonce', 'corrige'):
       assert.equal(document.compositionError, undefined, 'Un cours sans composition d\'exercices reste un document ordinaire');
       for (const variant of ['enonce', 'corrige']) {
         await runner.run(project, ['c', source]);
-        assert.ok((await stat(path.join(temporary, `build/chapitres/automates/${type}/${variant}.pdf`))).size > 0);
+        assert.ok((await stat(path.join(temporary, `build/chapitres/automates/${type}/${type}${variant === 'corrige' ? '-cor' : ''}.pdf`))).size > 0);
       }
     }
     // Aucun catalogue ni aucune cible catalogue n'est nécessaire à ce dépôt.

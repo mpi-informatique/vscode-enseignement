@@ -38,7 +38,7 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
       title: 'Exercice fictif privé', chapters: ['graphes'], algorithms: [], structures: [], languages: [], levels: ['MPI'], difficulty: 2, minutes: 20
     }));
     await runner.run(project, ['c', exercise]);
-    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/chapitres/graphes/exercices/test-prive', variant + '.pdf'))).size > 0);
+    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/chapitres/graphes/exercices/test-prive', `test-prive${variant === 'corrige' ? '-cor' : ''}.pdf`))).size > 0);
     vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders!.length, 0,
       { uri: project.scope, name: project.name });
     await until(async () => {
@@ -47,7 +47,7 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
     assert.ok((await documentTemplates(project)).some(template => template.type === 'copie'));
     await runner.run(project, ['c', source]);
     for (const variant of ['enonce', 'corrige'])
-      assert.ok((await stat(path.join(temporary, 'build/corrections/2026/ds/test/copies/exemple', variant === 'corrige' ? 'exemple-cor.pdf' : 'enonce.pdf'))).size > 0);
+      assert.ok((await stat(path.join(temporary, 'build/corrections/2026/ds/test/copies/exemple', variant === 'corrige' ? 'exemple-cor.pdf' : 'exemple.pdf'))).size > 0);
     const notes = (await readFile(path.join(temporary, 'corrections/2026/ds/test/notes.csv'), 'utf8')).replace(/^\uFEFF/, '').trim().split('\n');
     const recap = (await readFile(path.join(temporary, 'corrections/2026/ds/test/recapitulatif.csv'), 'utf8')).replace(/^\uFEFF/, '').trim().split('\n');
     assert.equal(notes.length, 6, 'Une copie et quatre lignes de barème/statistiques');

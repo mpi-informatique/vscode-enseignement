@@ -101,7 +101,7 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
     assert.equal(journalOpened, 0, "Le clic ouvre Problems, jamais le journal");
     errorStatus.clear(`build:${previewBank.root}:missing-test-target`);
     runner.output.show = originalShow;
-    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/exercices/banque/graphes/test-creation', `${variant}.pdf`))).size > 1000);
+    for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/exercices/banque/graphes/test-creation', `test-creation${variant === 'corrige' ? '-cor' : ''}.pdf`))).size > 1000);
     const fallback = new Previews({ extensionUri: extension.extensionUri } as vscode.ExtensionContext, async () => undefined, () => false);
     try {
       const pdfPreview = await fallback.open(previewBank, relative, 'enonce');

@@ -128,7 +128,7 @@ test('cours et présentation : reconnaissance, paramètres et sorties distinctes
   assert.deepEqual(variantLabels('td'), { enonce: 'Énoncé', corrige: 'Corrigé' });
   for (const [variant, format] of [['enonce', 'cours'], ['corrige', 'presentation']] as const) {
     assert.deepEqual(previewArguments('/bank', source, variant, true, type), ['--root', '/bank', '--ignore-system-fonts', '--input', `format=${format}`, `/bank/${source}`]);
-    assert.equal(pdfTarget(source, variant, false, type), `build/chapitres/automates/support/${format}.pdf`);
+    assert.equal(pdfTarget(source, variant, false, type), `build/chapitres/automates/support/${format}-support.pdf`);
     assert.equal(pdfFilename(source, variant, type), `${format}-support.pdf`);
     assert.equal(pdfFilename('chapitres/langages/cours-kleene.typ', variant, type), `${format}-kleene.pdf`);
   }
@@ -355,14 +355,14 @@ test('tous les filtres se cumulent avec la recherche', () => {
   assert.equal(matches({ ...exercise, concours: null }, '', { concours: 'ENS' }), false);
 });
 test('chemins PDF conformes aux scripts Python, feuilles imbriquées incluses', () => {
-  assert.equal(pdfTarget('exercices/devoirs/2026-2027/ds-1.typ', 'enonce'), 'build/exercices/devoirs/2026-2027/ds-1/enonce.pdf');
-  assert.equal(pdfTarget('exercices/devoirs/2026-2027/ds-1.typ', 'corrige'), 'build/exercices/devoirs/2026-2027/ds-1/corrige.pdf');
-  assert.equal(pdfTarget(exercise.fichier, 'enonce'), 'build/exercices/banque/langages/automates-monoides/enonce.pdf');
-  assert.equal(pdfTarget('exercices/concours/22/oral/test.typ', 'corrige'), 'build/exercices/concours/22/oral/test/corrige.pdf');
-  assert.equal(pdfTarget('exercices/feuilles/langages/td.typ', 'enonce'), 'build/exercices/feuilles/langages/td/enonce.pdf');
-  assert.equal(pdfTarget('exercices/feuilles/langages/td.typ', 'corrige'), 'build/exercices/feuilles/langages/td/corrige.pdf');
+  assert.equal(pdfTarget('exercices/devoirs/2026-2027/ds-1.typ', 'enonce'), 'build/exercices/devoirs/2026-2027/ds-1/ds-1.pdf');
+  assert.equal(pdfTarget('exercices/devoirs/2026-2027/ds-1.typ', 'corrige'), 'build/exercices/devoirs/2026-2027/ds-1/ds-1-cor.pdf');
+  assert.equal(pdfTarget(exercise.fichier, 'enonce'), 'build/exercices/banque/langages/automates-monoides/automates-monoides.pdf');
+  assert.equal(pdfTarget('exercices/concours/22/oral/test.typ', 'corrige'), 'build/exercices/concours/22/oral/test/test-cor.pdf');
+  assert.equal(pdfTarget('exercices/feuilles/langages/td.typ', 'enonce'), 'build/exercices/feuilles/langages/td/td.pdf');
+  assert.equal(pdfTarget('exercices/feuilles/langages/td.typ', 'corrige'), 'build/exercices/feuilles/langages/td/td-cor.pdf');
   assert.equal(pdfTarget('corrections/2026/ds/ds1/copies/exemple.typ', 'corrige', true), 'build/corrections/2026/ds/ds1/copies/exemple/exemple-cor.pdf');
-  assert.equal(pdfTarget('corrections/2026/ds/ds1/copies/exemple.typ', 'enonce', true), 'build/corrections/2026/ds/ds1/copies/exemple/enonce.pdf');
+  assert.equal(pdfTarget('corrections/2026/ds/ds1/copies/exemple.typ', 'enonce', true), 'build/corrections/2026/ds/ds1/copies/exemple/exemple.pdf');
 });
 test('rejet de chemins sortant de la banque et de chemins non pris en charge', () => {
   for (const source of ['../test.typ', 'exercices/../test.typ', '/exercices/test.typ', 'exercices/$(shell x).typ', 'exercices/test;exit.typ', 'exercices/test\n.typ']) assert.throws(() => pdfTarget(source, 'enonce'));

@@ -1,5 +1,5 @@
 export * from '@mpi-informatique/exercices-core';
-import { pdfFilename as exercisePdfFilename, safeSource, sourceId, type Variant } from '@mpi-informatique/exercices-core';
+import { pdfFilename as exercisePdfFilename, safeSource, type Variant } from '@mpi-informatique/exercices-core';
 
 export function outputVariant(variant: Variant, documentType?: string): string {
   return documentType === 'cours-presentation' ? (variant === 'enonce' ? 'cours' : 'presentation') : variant;
@@ -11,13 +11,13 @@ export function variantLabels(documentType?: string): Record<Variant, string> {
 
 export function pdfFilename(source: string, variant: Variant, documentType?: string): string {
   safeSource(source);
-  return documentType === 'cours-presentation' ? `${outputVariant(variant, documentType)}-${sourceId(source).replace(/^cours-/, '')}.pdf` : exercisePdfFilename(source, variant);
+  return exercisePdfFilename(source, variant, documentType);
 }
 
-export function pdfTarget(source: string, variant: Variant, copy = false, documentType?: string): string {
+export function pdfTarget(source: string, variant: Variant, _copy = false, documentType?: string): string {
   safeSource(source);
   const stem = source.slice(0, -4);
-  const filename = copy && variant === 'corrige' ? pdfFilename(source, variant) : `${outputVariant(variant, documentType)}.pdf`;
+  const filename = pdfFilename(source, variant, documentType);
   return `build/${stem}/${filename}`;
 }
 

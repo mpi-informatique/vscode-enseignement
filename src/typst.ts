@@ -114,7 +114,7 @@ export function exerciseFromTemplate(template: string, data: NewExercise): strin
   let depth = 1; let end = start;
   while (end < code.length && depth) { if (code[end] === '(') depth++; if (code[end] === ')') depth--; end++; }
   if (depth) throw new Error('Modèle incompatible : contenu non fermé.');
-  return result.slice(0, start) + '\n    question(\n      [Énoncé à compléter.],\n      points: none,\n      solution: none,\n    ),\n  ' + result.slice(end - 1);
+  return result.slice(0, start) + '\n    question(\n      [Énoncé à compléter.],\n      solution: none,\n    ),\n  ' + result.slice(end - 1);
 }
 
 export function sheetFromTemplate(template: string, title: string, files: string[]): string {
