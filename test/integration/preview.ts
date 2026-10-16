@@ -13,16 +13,30 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
   const runner = new Runner();
   const sockets: WebSocket[] = [];
   try {
+    await writeFile(path.join(path.dirname(file), 'corrige.ml'), 'let réponse = 42\n');
     const editor = await vscode.window.showTextDocument(vscode.Uri.file(file), { viewColumn: vscode.ViewColumn.One });
     const before = Date.now();
-    const preview = await previews.open(previewBank, relative, 'enonce');
-    assert.equal(preview.panel.title, 'test-creation.pdf');
-    console.log('Démarrage aperçu (ms)', Date.now() - before);
+    const opening = previews.open(previewBank, relative, 'enonce');
+    await until(() => previews.entries.has(`${previewBank.root}/${relative}`), 'Création du panneau d’aperçu');
+    const preview = previews.entries.get(`${previewBank.root}/${relative}`)!;
     let frames = 0;
     const nativeProgress: { current: number; total: number }[] = [];
     const listener = preview.panel.webview.onDidReceiveMessage(message => { if (message.type === 'frameReady') frames++; if (message.type === 'pageProgress' && message.total) nativeProgress.push(message); });
+    await opening;
+    assert.equal(preview.panel.title, 'test-creation.pdf');
+    console.log('Démarrage aperçu (ms)', Date.now() - before);
     await until(() => frames > 0, "L'iframe Tinymist ne se charge pas");
     await until(() => nativeProgress.some(progress => progress.current === 1 && progress.total >= 1), 'Pagination du rendu Tinymist');
+    const codeEdit = new vscode.WorkspaceEdit();
+    codeEdit.insert(editor.document.uri, editor.document.positionAt(editor.document.getText().length), '\n#let source-code = read("corrige.ml")\n');
+    await vscode.workspace.applyEdit(codeEdit);
+    const post = preview.panel.webview.postMessage.bind(preview.panel.webview);
+    let hasCode: boolean | undefined;
+    preview.panel.webview.postMessage = message => { if (message.type === 'show') hasCode = message.hasCode; return post(message); };
+    await preview.select('enonce');
+    assert.equal(hasCode, true, 'L’aperçu reçoit la disponibilité du code pour afficher son bouton');
+    assert.match(preview.panel.webview.html, /id="code"/);
+    preview.panel.webview.postMessage = post;
     const enonce = preview.sessions.get('enonce')!;
     let documentOutline: any;
     enonce.connection.onNotification('tinymist/documentOutline', outline => { documentOutline = outline; });
@@ -104,11 +118,14 @@ export async function run(api: any, extension: vscode.Extension<any>): Promise<v
     for (const variant of ['enonce', 'corrige']) assert.ok((await stat(path.join(temporary, 'build/exercices/banque/graphes/test-creation', `test-creation${variant === 'corrige' ? '-cor' : ''}.pdf`))).size > 1000);
     const fallback = new Previews({ extensionUri: extension.extensionUri } as vscode.ExtensionContext, async () => undefined, () => false);
     try {
-      const pdfPreview = await fallback.open(previewBank, relative, 'enonce');
-      assert.equal(pdfPreview.jumps, false); assert.equal(pdfPreview.native, false);
+      const pdfOpening = fallback.open(previewBank, relative, 'enonce');
+      await until(() => fallback.entries.has(`${previewBank.root}/${relative}`), 'Création du panneau PDF');
+      const pdfPreview = fallback.entries.get(`${previewBank.root}/${relative}`)!;
       let pdfReady = 0;
       let pdfProgress: { current: number; total: number } | undefined;
       const pdfListener = pdfPreview.panel.webview.onDidReceiveMessage(message => { if (message.type === 'pdfError') console.error(message.error); if (message.type === 'pdfReady') pdfReady++; if (message.type === 'pageProgress' && message.total) pdfProgress = message; });
+      await pdfOpening;
+      assert.equal(pdfPreview.jumps, false); assert.equal(pdfPreview.native, false);
       pdfPreview.panel.reveal(vscode.ViewColumn.Beside);
       await pdfPreview.restart();
       await until(() => pdfReady > 0, 'PDF affiché sans Tinymist');
@@ -180,7 +197,7 @@ Une indication réservée à la présentation.]
       assert.equal(pdf.panel.title, 'cours-support.pdf');
       await pdf.select('corrige');
       assert.equal(pdf.panel.title, 'presentation-support.pdf');
-      for (const format of ['cours', 'presentation']) assert.ok((await stat(path.join(temporary, 'build/support', `${format}.pdf`))).size > 1000);
+      for (const format of ['cours', 'presentation']) assert.ok((await stat(path.join(temporary, 'build/support', `${format}-support.pdf`))).size > 1000);
     } finally { courseFallback.dispose(); }
     vscode.workspace.updateWorkspaceFolders(vscode.workspace.workspaceFolders!.length, 0, { uri: previewBank.scope, name: previewBank.name });
     await until(async () => {

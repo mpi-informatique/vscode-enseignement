@@ -26,7 +26,8 @@ try {
     extensionDevelopmentPath: existsSync(tinymist) ? [root, tinymist] : [root],
     extensionTestsPath: path.join(root, 'dist/integration.js'),
     vscodeExecutablePath: process.env.VSCODE_EXECUTABLE ?? (process.platform === 'darwin' && existsSync(localCode) ? localCode : undefined),
-    launchArgs: [workspace, '--new-window', '--disable-extensions', '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', '--user-data-dir', userData],
+    // Garder le rendu et la pagination actifs lorsque la fenêtre de test reste en arrière-plan.
+    launchArgs: [workspace, '--new-window', '--disable-extensions', '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', '--disable-renderer-backgrounding', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--user-data-dir', userData],
     extensionTestsEnv: {
       MPI_EXERCICES_ROOT: bank,
       MPI_PUBLIC_ROOT: process.env.MPI_PUBLIC_ROOT ?? path.resolve(root, '../exercices'),

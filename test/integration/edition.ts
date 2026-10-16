@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
-import { stat, mkdir, writeFile, rm, readFile } from 'node:fs/promises';
+import { stat, mkdir, writeFile, rm, readFile, symlink } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { Runner } from '../../src/runner';
 import { sheetFromTemplate, contestFromTemplate, creationPath } from '../../src/typst';
@@ -12,12 +12,14 @@ import { relocated, moveSource, directories } from '../../src/files';
 import { sheetList, sourceMetadata } from '../../src/sheet-model';
 import { Drag } from '../../src/drag';
 import { identify } from '../../src/documents';
-import { fixture } from './helpers';
+import { fixture, until } from './helpers';
+import { associatedCodes, CodeLinks, openAssociatedCode } from '../../src/code-files';
 export async function run(_api: any, _extension?: unknown): Promise<void> {
   const { temporary, previewBank, customTemplate, relative, generated, file } = await fixture();
   const bank = process.env.MPI_EXERCICES_ROOT!;
   const runner = new Runner();
   try {
+    await codeAccess(previewBank, _api);
     const entries = [{ bank: previewBank, ex: {
       ...sourceMetadata(generated, relative), titre: 'Automates et monoïdes', concours: { nom: 'ENS' },
     } }];
@@ -154,4 +156,64 @@ export async function run(_api: any, _extension?: unknown): Promise<void> {
     await assert.rejects(stat(file));
   } finally { runner.dispose(); await vscode.commands.executeCommand('workbench.action.closeAllEditors'); await rm(temporary, { recursive: true, force: true }); }
   console.log('Édition, recherche, déplacements et exports vérifiés.');
+}
+
+async function codeAccess(bank: { root: string; name: string; scope: vscode.Uri }, api: any): Promise<void> {
+  const directory = path.join(bank.root, 'exercices/codes');
+  await mkdir(directory, { recursive: true });
+  const source = 'exercices/codes/codes.typ';
+  const text = '#import "helper.typ"\n#let code = read("corrige.ml")\n// read("ignore.c")\n```typst\n#read("ignore.c")\n```\n#read("absent.ml")\n#read("externe.ml")';
+  for (const [name, content] of Object.entries({ 'codes.typ': text, 'helper.typ': '#import "codes.typ"\n#read("../importe.sql")', 'corrige.ml': 'let réponse = 42', 'programme.py': 'print(42)', 'ignore.c': 'int x;' })) await writeFile(path.join(directory, name), content);
+  await writeFile(path.join(bank.root, 'exercices/importe.sql'), 'select 42;');
+  await symlink(path.join(process.env.MPI_PUBLIC_ROOT!, 'load.typ'), path.join(directory, 'externe.ml'));
+  const files = await associatedCodes({ bank, source });
+  assert.deepEqual(files, ['exercices/codes/corrige.ml', 'exercices/codes/ignore.c', 'exercices/codes/programme.py', 'exercices/importe.sql'], 'Imports cycliques, plusieurs codes voisins, fichiers absents et liens externes');
+  const uri = vscode.Uri.file(path.join(bank.root, source));
+  const document = await vscode.workspace.openTextDocument(uri);
+  const provider = new CodeLinks(() => [bank]);
+  const cancellation = new vscode.CancellationTokenSource();
+  const registration = vscode.languages.registerDocumentLinkProvider({ scheme: 'file', pattern: directory + '/*.typ' }, provider);
+  try {
+    const registeredLinks = await vscode.commands.executeCommand<vscode.DocumentLink[]>('vscode.executeLinkProvider', uri);
+    assert.ok(registeredLinks.some(link => link.target?.fsPath === path.join(directory, 'corrige.ml')), 'Le fournisseur est accessible par l’API VS Code');
+    const links = await provider.provideDocumentLinks(document, cancellation.token);
+    assert.equal(links.filter(link => link.target?.fsPath === path.join(directory, 'corrige.ml')).length, 1);
+    assert.ok(!links.some(link => link.target?.fsPath.endsWith('externe.ml') || link.target?.fsPath.endsWith('ignore.c')));
+    const link = links.find(link => link.target?.fsPath === path.join(directory, 'corrige.ml'))!;
+    assert.equal(document.getText(link.range), 'corrige.ml', 'Lien exactement sur le nom, sans les guillemets');
+    await vscode.window.showTextDocument(uri);
+    const opening = openAssociatedCode({ bank, source });
+    await until(async () => {
+      await vscode.commands.executeCommand('workbench.action.acceptSelectedQuickOpenItem');
+      return vscode.window.activeTextEditor?.document.uri.fsPath === path.join(directory, 'corrige.ml');
+    }, 'Le choix parmi plusieurs codes doit ouvrir le fichier sélectionné');
+    await opening;
+  } finally { registration.dispose(); cancellation.dispose(); }
+  const single = 'exercices/lien-code.typ';
+  await writeFile(path.join(bank.root, single), '#read("importe.sql")');
+  await openAssociatedCode({ bank, source: single });
+  assert.equal(vscode.window.activeTextEditor?.document.uri.fsPath, path.join(bank.root, 'exercices/importe.sql'));
+  const edit = new vscode.WorkspaceEdit();
+  const singleDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(bank.root, single)));
+  edit.replace(singleDocument.uri, new vscode.Range(singleDocument.positionAt(0), singleDocument.positionAt(singleDocument.getText().length)), '#read("codes/corrige.ml")');
+  await vscode.workspace.applyEdit(edit);
+  assert.ok(singleDocument.isDirty);
+  await openAssociatedCode({ bank, source: single });
+  assert.equal(vscode.window.activeTextEditor?.document.uri.fsPath, path.join(directory, 'corrige.ml'), 'Les modifications non enregistrées sont prises en compte');
+  await vscode.window.showTextDocument(singleDocument);
+  await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+  await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+  let commandChecked = false;
+  for (const entry of api.getEntries()) {
+    const codes = await associatedCodes({ bank: { root: entry.bank, name: 'Banque ouverte', scope: vscode.Uri.file(entry.bank) }, source: entry.fichier });
+    if (codes.length !== 1) continue;
+    await vscode.commands.executeCommand('mpiExercices.code', vscode.Uri.file(path.join(entry.bank, entry.fichier)));
+    assert.equal(vscode.window.activeTextEditor?.document.uri.fsPath, path.join(entry.bank, codes[0]), 'La commande réelle ouvre le code de la banque');
+    commandChecked = true;
+    break;
+  }
+  assert.ok(commandChecked, 'Au moins un exercice de la banque possède un code pour vérifier la commande');
+  await rm(path.join(bank.root, 'exercices/lien-code.typ'));
+  await rm(path.join(bank.root, 'exercices/importe.sql'));
+  await rm(directory, { recursive: true, force: true });
 }

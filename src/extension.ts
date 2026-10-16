@@ -20,6 +20,7 @@ import { errorStatus } from './errors';
 import { mask } from './typst';
 import { environment, disposeEnvironments } from './environment';
 import { bankCandidates } from './discovery';
+import { CodeLinks, openAssociatedCode } from './code-files';
 
 export async function activate(context: vscode.ExtensionContext) {
   const runner = new Runner();
@@ -276,6 +277,7 @@ export async function activate(context: vscode.ExtensionContext) {
   }
   register('refresh', async () => { await discovery; if (!banks.length) await discoverQueued(); for (const bank of banks) { if (hasCatalogue(bank)) await runner.run(bank, ['catalogue']); await load(bank); await scan(bank, sheets); } });
   register('source', async (argument?: BrowserNode | vscode.Uri) => { const source = await chooseSource(argument); if (source) await vscode.window.showTextDocument(vscode.Uri.file(path.join(source.bank.root, source.source))); });
+  register('code', async (argument?: BrowserNode | vscode.Uri) => { const source = await chooseSource(argument); if (source) await openAssociatedCode(source); });
   for (const variant of ['enonce', 'corrige'] as const) register(variant, async (argument?: BrowserNode | vscode.Uri) => { const source = await chooseSource(argument); if (source) await previews.open(source.bank, source.source, variant); });
   for (const variant of ['enonce', 'corrige'] as const) register('download' + (variant === 'corrige' ? 'Corrige' : 'Enonce'), async (argument?: BrowserNode | vscode.Uri) => {
     const source = await chooseSource(argument);
@@ -328,6 +330,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration(event => { if (event.affectsConfiguration('mpiExercices.bankPath')) void discoverQueued().catch(report); }),
     { dispose: () => { disposed = true; for (const watcher of watchers) watcher.dispose(); } });
   await discoverQueued();
+  context.subscriptions.push(vscode.languages.registerDocumentLinkProvider({ scheme: 'file', pattern: '**/*.typ' }, new CodeLinks(() => banks)));
   schedulePreparation();
   return {
     getEntries: () => entries().map(({ bank, ex }) => ({ bank: bank.root, ...ex })),

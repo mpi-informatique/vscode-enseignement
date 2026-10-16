@@ -122,7 +122,7 @@ async function pdf(data) {
     if (revision === epoch) vscode.postMessage({ type: 'pdfReady', pages: doc.numPages });
   } finally { await loading.destroy(); worker.destroy(); port.terminate(); URL.revokeObjectURL(url); }
 }
-for (const id of ['enonce', 'corrige', 'save', 'jumps', 'theme', 'fullscreen', 'restart']) {
+for (const id of ['enonce', 'corrige', 'save', 'code', 'jumps', 'theme', 'fullscreen', 'restart']) {
   document.getElementById(id).onclick = () => vscode.postMessage({ type: id });
 }
 window.addEventListener('message', ({ data }) => {
@@ -132,6 +132,7 @@ window.addEventListener('message', ({ data }) => {
   if (data.type === 'compileError') { compileError.textContent = data.message; compileError.hidden = !data.message; }
   if (data.type !== 'show') return;
   state = data;
+  document.getElementById('code').hidden = !data.hasCode;
   if (data.native) showProgress(pagination.get(data.variant));
   document.body.classList.toggle('pdf-dark', !data.native && data.dark);
   document.getElementById('jumps').disabled = !data.native;

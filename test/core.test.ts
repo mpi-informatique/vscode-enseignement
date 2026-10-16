@@ -304,12 +304,16 @@ test('lecteur : F5/F6 depuis le PDF, la barre et l’iframe active, avec validat
       assert.equal(messages.length, count);
     }
   }
-  dispatch('message', { data: { channel: 'test', type: 'show', native: true, variant: 'enonce', labels: { enonce: 'Cours', corrige: 'Présentation' }, sessions: { enonce: 'http://localhost:123/enonce', corrige: 'http://localhost:123/corrige' }, tokens: { enonce: 'secret', corrige: 'other' } } });
+  dispatch('message', { data: { channel: 'test', type: 'show', hasCode: true, native: true, variant: 'enonce', labels: { enonce: 'Cours', corrige: 'Présentation' }, sessions: { enonce: 'http://localhost:123/enonce', corrige: 'http://localhost:123/corrige' }, tokens: { enonce: 'secret', corrige: 'other' } } });
+  assert.equal(elements.get('code').hidden, false, 'Le bouton de code apparaît pour les feuilles avec code');
+  elements.get('code').onclick();
+  assert.equal(messages.at(-1).type, 'code', 'Le bouton demande l’ouverture du code à l’extension');
   // Frames are created in session order; retain their windows to exercise origin/source checks.
   const frames: any[] = [];
   document.createElement = () => { const frame = element(); frames.push(frame); return frame; };
   dispatch('message', { data: { channel: 'test', type: 'reset' } });
   dispatch('message', { data: { channel: 'test', type: 'show', native: true, variant: 'enonce', labels: { enonce: 'Énoncé', corrige: 'Corrigé' }, sessions: { enonce: 'http://localhost:123/enonce', corrige: 'http://localhost:123/corrige' }, tokens: { enonce: 'secret', corrige: 'other' } } });
+  assert.equal(elements.get('code').hidden, true, 'Le bouton disparaît pour une feuille sans code');
   const event = { source: frames[0].contentWindow, origin: 'http://localhost:123', data: { type: 'selectVariant', token: 'secret', variant: 'corrige' } };
   const count = messages.length;
   dispatch('message', { ...event, origin: 'http://foreign.invalid' });

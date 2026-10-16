@@ -32,6 +32,8 @@ Les TD et devoirs composés démarrent vides : sélectionner un document, puis a
 
 Glisser un fichier sur un dossier permet de le déplacer dans son dépôt : les références Typst littérales sont actualisées. Vérifier les chemins calculés et les références externes. La suppression passe par la corbeille et refuse un fichier encore référencé. Les déplacements entre dépôts restent manuels.
 
+**Ouvrir les codes associés** est accessible depuis la barre de l'éditeur Typst, la palette de commandes et le menu contextuel des exercices et documents. Le bouton **Codes associés** apparaît aussi dans l'aperçu lorsqu'il y a du code. Un seul fichier s'ouvre directement ; plusieurs fichiers donnent un choix. La recherche suit les imports de la feuille et retrouve aussi les codes placés dans le dossier propre à chaque sujet. Elle tient compte des modifications Typst non enregistrées. Les codes s'ouvrent dans l'éditeur VS Code et l'aperçu reste ouvert. Dans un `.typ`, Ctrl/Cmd+clic sur un chemin littéral de code ouvre directement ce fichier, dans la banque publique comme dans la banque privée.
+
 ## Raccourcis
 
 Dans un éditeur Typst ou une liste du panneau, hors des champs de saisie :

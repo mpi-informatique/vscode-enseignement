@@ -9,6 +9,7 @@ import { errorStatus } from './errors';
 import { copyDirectory } from './copy-inputs';
 import { identify } from './documents';
 import { Preparation } from './preparation';
+import { associatedCodes, openAssociatedCode } from './code-files';
 
 export interface Preview {
   bank: Bank; source: string; variant: Variant; panel: vscode.WebviewPanel;
@@ -128,8 +129,9 @@ export class Previews implements vscode.Disposable {
     };
     const describe = async () => {
       panel.title = pdfFilename(source, preview.variant, documentType);
+      const hasCode = (await associatedCodes({ bank, source })).length > 0;
       if (ready && !disposed) await post({ type: 'compileError', message: errors.get(preview.variant) ?? '' });
-      if (ready && !disposed) await post({ type: 'show', variant: preview.variant, labels, native: preview.native, jumps: preview.jumps, dark: isDark(), pdf: pdfs.get(preview.variant), sessions: Object.fromEntries([...sessions].map(([v, s]) => [v, s.url])), tokens: Object.fromEntries([...sessions].map(([v, s]) => [v, s.id])) });
+      if (ready && !disposed) await post({ type: 'show', variant: preview.variant, labels, hasCode, native: preview.native, jumps: preview.jumps, dark: isDark(), pdf: pdfs.get(preview.variant), sessions: Object.fromEntries([...sessions].map(([v, s]) => [v, s.url])), tokens: Object.fromEntries([...sessions].map(([v, s]) => [v, s.id])) });
     };
     const select = async (value: Variant) => {
       if (disposed) return;
@@ -183,6 +185,7 @@ export class Previews implements vscode.Disposable {
         else if (message?.type === 'restart') await preview.restart();
         else if (message?.type === 'sync') await this.sync();
         else if (message?.type === 'save') await this.exportPdf(preview, preview.variant);
+        else if (message?.type === 'code') await openAssociatedCode({ bank, source });
       } catch (error) { if (!disposed) { this.report(error); await post({ type: 'status', message: String(error) }); } }
     });
     panel.onDidDispose(() => {
@@ -200,6 +203,7 @@ export class Previews implements vscode.Disposable {
       <link rel="stylesheet" href="${uri('viewer.css')}"></head><body data-channel="${channel}" data-pdfjs="${escape(webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'pdfjs')).toString())}/">
       <nav aria-label="Outils de l'aperçu"><button id="enonce" aria-pressed="true">${escape(labels.enonce)}</button><button id="corrige" aria-pressed="false">${escape(labels.corrige)}</button>
       <span class="spacer" aria-hidden="true"></span>
+      <button id="code" title="Ouvrir les codes associés" aria-label="Ouvrir les codes associés" hidden><svg viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16"/></svg></button>
       <div id="page-progress" role="group" aria-label="Pagination">
       <button id="previous-page" title="Page précédente (←)" aria-label="Page précédente" disabled>‹</button>
       <input id="page-number" type="number" min="1" step="1" aria-label="Page actuelle" title="Choisir une page et valider avec Entrée" disabled>

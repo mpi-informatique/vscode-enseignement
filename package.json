@@ -145,6 +145,12 @@
         "icon": "$(go-to-file)"
       },
       {
+        "command": "mpiExercices.code",
+        "title": "Ouvrir les codes associés",
+        "category": "Exercices MPI",
+        "icon": "$(code)"
+      },
+      {
         "command": "mpiExercices.enonce",
         "title": "Compiler et afficher l'énoncé",
         "category": "Exercices MPI",
@@ -332,6 +338,11 @@
       ],
       "view/item/context": [
         {
+          "command": "mpiExercices.code",
+          "when": "viewItem == exercice || viewItem == typstSource || viewItem == sheetMember",
+          "group": "files@3"
+        },
+        {
           "command": "mpiExercices.addCurrent",
           "when": "viewItem == exercice",
           "group": "inline@3"
@@ -409,6 +420,11 @@
       ],
       "editor/title": [
         {
+          "command": "mpiExercices.code",
+          "when": "resourceExtname == .typ",
+          "group": "navigation@7"
+        },
+        {
           "command": "mpiExercices.enonce",
           "when": "resourceExtname == .typ",
           "group": "navigation@8"
@@ -420,6 +436,11 @@
         }
       ],
       "explorer/context": [
+        {
+          "command": "mpiExercices.code",
+          "when": "resourceExtname == .typ",
+          "group": "mpiExercices@3"
+        },
         {
           "command": "mpiExercices.enonce",
           "when": "resourceExtname == .typ",

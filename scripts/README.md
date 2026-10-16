@@ -9,6 +9,7 @@
 | `browser.ts`, `tree.ts`, `search.ts`, `search-order.ts` | Arborescences, filtres, recherche et historique. |
 | `authoring.ts`, `typst.ts`, `sheet-model.ts`, `sheets.ts` | Créer les sources depuis les modèles et modifier les compositions littérales. |
 | `files.ts`, `drag.ts`, `outline.ts` | Gérer les fichiers, le glisser-déposer et le plan du document. |
+| `code-files.ts` | Retrouver les codes associés, les ouvrir et lier leurs chemins dans les sources Typst. |
 | `preview.ts`, `tinymist.ts`, `preview-bridge.ts`, `copy-inputs.ts` | Afficher les variantes, synchroniser les positions et fournir les statistiques des copies. |
 | `errors.ts` | Présenter les erreurs dans la barre d'état et Problems. |
 
